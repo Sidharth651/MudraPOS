@@ -3,12 +3,20 @@
 -- Run this in your Supabase SQL Editor
 -- ============================================================
 
+-- ── Categories ───────────────────────────────────────────────
+
+CREATE TABLE IF NOT EXISTS categories (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  name TEXT NOT NULL UNIQUE,
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+
 -- ── Products ────────────────────────────────────────────────
 
 CREATE TABLE IF NOT EXISTS products (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   name TEXT NOT NULL,
-  category TEXT NOT NULL DEFAULT 'fabric' CHECK (category IN ('fabric', 'shirts', 'pants', 'accessories')),
+  category TEXT NOT NULL DEFAULT 'fabric',
   price_per_unit NUMERIC(10, 2) NOT NULL,
   unit TEXT NOT NULL DEFAULT 'metre' CHECK (unit IN ('metre', 'piece')),
   hsn_code TEXT,
@@ -87,9 +95,6 @@ CREATE TABLE IF NOT EXISTS staff (
 CREATE TABLE IF NOT EXISTS settings (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   shop_name TEXT DEFAULT 'MudraPOS',
-  address TEXT DEFAULT '',
-  gstin TEXT DEFAULT '',
-  phone TEXT DEFAULT '',
   gst_low_threshold NUMERIC(10, 2) DEFAULT 1000,
   gst_low_rate NUMERIC(5, 2) DEFAULT 5,
   gst_high_rate NUMERIC(5, 2) DEFAULT 12,
@@ -101,6 +106,7 @@ CREATE TABLE IF NOT EXISTS settings (
 
 -- ── Row Level Security ──────────────────────────────────────
 
+ALTER TABLE categories ENABLE ROW LEVEL SECURITY;
 ALTER TABLE products ENABLE ROW LEVEL SECURITY;
 ALTER TABLE customers ENABLE ROW LEVEL SECURITY;
 ALTER TABLE bills ENABLE ROW LEVEL SECURITY;
@@ -110,6 +116,7 @@ ALTER TABLE staff ENABLE ROW LEVEL SECURITY;
 ALTER TABLE settings ENABLE ROW LEVEL SECURITY;
 
 -- Allow all access for now (no auth setup yet)
+CREATE POLICY "Allow all access to categories" ON categories FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Allow all access to products" ON products FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Allow all access to customers" ON customers FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Allow all access to bills" ON bills FOR ALL USING (true) WITH CHECK (true);

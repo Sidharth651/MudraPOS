@@ -86,9 +86,20 @@ body {
 
 /* ── Print ────────────────────────────────────────────────── */
 
+.receipt-print-only {
+  display: none;
+}
+
 @media print {
+  @page {
+    size: 58mm auto;
+    margin: 2mm;
+  }
   .no-print {
     display: none !important;
+  }
+  .receipt-print-only {
+    display: block;
   }
   body {
     background: white;

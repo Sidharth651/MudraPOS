@@ -1,26 +1,64 @@
 "use client";
 
 import { useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { Drawer } from "@/components/ui/drawer";
 import { useUIStore } from "@/stores/ui-store";
 import { formatINR } from "@/lib/utils";
+import { createClient } from "@/lib/supabase/client";
 import type { Customer } from "@/types/database";
 
 export function PaymentFormDrawer() {
   const { drawerOpen, drawerContent, drawerData, closeDrawer } = useUIStore();
+  const queryClient = useQueryClient();
   const isOpen = drawerOpen && drawerContent === "add-payment";
   const customer = drawerData?.customer as unknown as Customer | undefined;
 
   const [amount, setAmount] = useState("");
   const [method, setMethod] = useState("cash");
   const [notes, setNotes] = useState("");
+  const [saving, setSaving] = useState(false);
 
-  const handleSave = () => {
-    if (!amount || parseFloat(amount) <= 0) return;
-    closeDrawer();
-    setAmount("");
-    setMethod("cash");
-    setNotes("");
+  const handleSave = async () => {
+    if (!amount || parseFloat(amount) <= 0 || !customer) return;
+
+    setSaving(true);
+    try {
+      const supabase = createClient();
+      const paymentAmount = parseFloat(amount);
+
+      const { error: paymentError } = await supabase
+        .from("payments")
+        .insert({
+          customer_id: customer.id,
+          amount: paymentAmount,
+          payment_method: method,
+          notes,
+        });
+
+      if (paymentError) throw paymentError;
+
+      const newBalance = customer.outstanding_balance - paymentAmount;
+      const { error: updateError } = await supabase
+        .from("customers")
+        .update({ outstanding_balance: newBalance })
+        .eq("id", customer.id);
+
+      if (updateError) throw updateError;
+
+      await queryClient.invalidateQueries({ queryKey: ["customers"] });
+      await queryClient.invalidateQueries({ queryKey: ["ledger"] });
+
+      closeDrawer();
+      setAmount("");
+      setMethod("cash");
+      setNotes("");
+    } catch (error) {
+      console.error("Failed to record payment:", error);
+      alert("Failed to record payment. Please try again.");
+    } finally {
+      setSaving(false);
+    }
   };
 
   const inputClass =
@@ -64,7 +102,6 @@ export function PaymentFormDrawer() {
           >
             <option value="cash">Cash</option>
             <option value="upi">UPI</option>
-            <option value="card">Card</option>
           </select>
         </div>
 
@@ -81,10 +118,10 @@ export function PaymentFormDrawer() {
 
         <button
           onClick={handleSave}
-          disabled={!amount || parseFloat(amount) <= 0}
+          disabled={!amount || parseFloat(amount) <= 0 || saving}
           className="w-full mt-4 py-3 bg-green text-white rounded-xl font-semibold text-sm hover:bg-green-dark transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          Record Payment
+          {saving ? "Saving..." : "Record Payment"}
         </button>
       </div>
     </Drawer>

@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { Drawer } from "@/components/ui/drawer";
 import { useUIStore } from "@/stores/ui-store";
+import { useCategories } from "@/lib/hooks";
 import type { Product } from "@/types/database";
 
 export function ProductFormDrawer() {
@@ -10,6 +11,8 @@ export function ProductFormDrawer() {
   const isOpen = drawerOpen && (drawerContent === "add-product" || drawerContent === "edit-product");
   const isEdit = drawerContent === "edit-product";
   const product = drawerData?.product as unknown as Product | undefined;
+
+  const { data: categories } = useCategories();
 
   const [name, setName] = useState("");
   const [category, setCategory] = useState("fabric");
@@ -70,10 +73,15 @@ export function ProductFormDrawer() {
             onChange={(e) => setCategory(e.target.value)}
             className={inputClass}
           >
-            <option value="fabric">Fabric</option>
-            <option value="shirts">Shirts</option>
-            <option value="pants">Pants</option>
-            <option value="accessories">Accessories</option>
+            {categories?.length ? (
+              categories.map((cat) => (
+                <option key={cat.id} value={cat.name}>
+                  {cat.name}
+                </option>
+              ))
+            ) : (
+              <option value="fabric">Fabric</option>
+            )}
           </select>
         </div>
 

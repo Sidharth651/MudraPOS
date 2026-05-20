@@ -10,11 +10,27 @@ import type {
   SalesBreakdown,
   TopProduct,
   LedgerEntry,
+  Category,
 } from "@/types/database";
 
 // Utility hook to get the Supabase client
 export function useSupabase() {
   return createClient();
+}
+
+export function useCategories() {
+  const supabase = useSupabase();
+  return useQuery({
+    queryKey: ["categories"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("categories")
+        .select("*")
+        .order("name", { ascending: true });
+      if (error) throw error;
+      return data as Category[];
+    },
+  });
 }
 
 export function useProducts() {
@@ -74,9 +90,6 @@ export function useSettings() {
         return {
           id: data.id,
           shop_name: data.shop_name,
-          address: data.address,
-          gstin: data.gstin,
-          phone: data.phone,
           gst_config: {
             low_threshold: data.gst_low_threshold,
             low_rate: data.gst_low_rate,
@@ -118,14 +131,12 @@ export function useDailySummary() {
       let total_sales = 0;
       let cash_collected = 0;
       let upi_collected = 0;
-      let card_collected = 0;
       let khata_credit = 0;
       
       todayBills.forEach(b => {
         total_sales += Number(b.total);
         if (b.payment_method === 'cash') cash_collected += Number(b.total);
         else if (b.payment_method === 'upi') upi_collected += Number(b.total);
-        else if (b.payment_method === 'card') card_collected += Number(b.total);
         else if (b.payment_method === 'credit') khata_credit += Number(b.total);
       });
       
@@ -133,7 +144,6 @@ export function useDailySummary() {
         total_sales,
         cash_collected,
         upi_collected,
-        card_collected,
         khata_credit,
         items_sold: todayBills.length, // approximation
         bills_count: todayBills.length,
@@ -152,7 +162,6 @@ export function useSalesBreakdown() {
       return [
         { label: "Cash", amount: summary.cash_collected, color: "#16A34A" },
         { label: "UPI", amount: summary.upi_collected, color: "#7C3AED" },
-        { label: "Card", amount: summary.card_collected, color: "#2563EB" },
         { label: "Credit (Khata)", amount: summary.khata_credit, color: "#F59E0B" },
       ] as SalesBreakdown[];
     },
@@ -184,7 +193,7 @@ export function useLedgerEntries(customerId: string) {
         .from("bills")
         .select("*")
         .eq("customer_id", customerId)
-        .eq("payment_method", "credit");
+        .or("payment_method.eq.credit,status.eq.pending");
         
       if (bErr) throw bErr;
       
@@ -235,5 +244,33 @@ export function useLedgerEntries(customerId: string) {
       return entries.reverse();
     },
     enabled: !!customerId,
+  });
+}
+
+export function useNextBillNumber() {
+  const supabase = useSupabase();
+  return useQuery({
+    queryKey: ["nextBillNumber"],
+    queryFn: async () => {
+      const year = new Date().getFullYear();
+      const prefix = `INV-${year}-`;
+
+      const { data, error } = await supabase
+        .from("bills")
+        .select("bill_number")
+        .like("bill_number", `${prefix}%`)
+        .order("bill_number", { ascending: false })
+        .limit(1);
+
+      if (error) throw error;
+
+      let nextNum = 1;
+      if (data && data.length > 0) {
+        const lastNum = parseInt(data[0].bill_number.replace(prefix, ""), 10);
+        if (!isNaN(lastNum)) nextNum = lastNum + 1;
+      }
+
+      return `${prefix}${String(nextNum).padStart(3, "0")}`;
+    },
   });
 }

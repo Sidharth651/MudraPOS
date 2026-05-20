@@ -2,9 +2,13 @@
 // KapdaKart POS — Database Types
 // ============================================================
 
-export type Category = "fabric" | "shirts" | "pants" | "accessories";
+export interface Category {
+  id: string;
+  name: string;
+  created_at: string;
+}
 
-export type PaymentMethod = "cash" | "upi" | "card" | "split" | "credit";
+export type PaymentMethod = "cash" | "upi" | "credit";
 
 export type StaffRole = "owner" | "manager" | "billing";
 
@@ -17,7 +21,7 @@ export type Unit = "metre" | "piece";
 export interface Product {
   id: string;
   name: string;
-  category: Category;
+  category: string;
   price_per_unit: number;
   unit: Unit;
   hsn_code: string;
@@ -90,9 +94,6 @@ export interface GSTConfig {
 export interface ShopSettings {
   id: string;
   shop_name: string;
-  address: string;
-  gstin: string;
-  phone: string;
   gst_config: GSTConfig;
   printer_enabled: boolean;
   whatsapp_enabled: boolean;
@@ -129,7 +130,6 @@ export interface DailySummary {
   total_sales: number;
   cash_collected: number;
   upi_collected: number;
-  card_collected: number;
   khata_credit: number;
   items_sold: number;
   bills_count: number;

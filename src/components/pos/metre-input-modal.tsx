@@ -12,10 +12,10 @@ interface MetreInputModalProps {
 }
 
 export function MetreInputModal({ product, onClose }: MetreInputModalProps) {
-  const [quantity, setQuantity] = useState(product.unit === "metre" ? 1.0 : 1);
+  const [quantity, setQuantity] = useState(product.unit === "metre" ? 1.6 : 1);
   const addItem = useCartStore((s) => s.addItem);
 
-  const step = product.unit === "metre" ? 0.5 : 1;
+  const step = product.unit === "metre" ? 0.1 : 1;
   const subtotal = quantity * product.price_per_unit;
 
   useEffect(() => {
@@ -66,7 +66,7 @@ export function MetreInputModal({ product, onClose }: MetreInputModalProps) {
           </label>
           <div className="flex items-center gap-3">
             <button
-              onClick={() => setQuantity(Math.max(step, quantity - step))}
+              onClick={() => setQuantity(Number(Math.max(step, quantity - step).toFixed(2)))}
               className="w-10 h-10 rounded-xl border border-border flex items-center justify-center hover:bg-surface transition-colors"
             >
               <Minus className="w-4 h-4" />
@@ -80,7 +80,7 @@ export function MetreInputModal({ product, onClose }: MetreInputModalProps) {
               className="flex-1 text-center text-xl font-bold border border-border rounded-xl px-4 py-2.5 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
             />
             <button
-              onClick={() => setQuantity(quantity + step)}
+              onClick={() => setQuantity(Number((quantity + step).toFixed(2)))}
               className="w-10 h-10 rounded-xl border border-border flex items-center justify-center hover:bg-surface transition-colors"
             >
               <Plus className="w-4 h-4" />

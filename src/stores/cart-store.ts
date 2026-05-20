@@ -3,15 +3,18 @@
 // ============================================================
 
 import { create } from "zustand";
-import type { CartItem, PaymentMethod, Unit } from "@/types/database";
+import { createClient } from "@/lib/supabase/client";
+import type { CartItem, PaymentMethod, Unit, Bill } from "@/types/database";
 
 interface CartState {
   items: CartItem[];
   discount_type: "percentage" | "flat";
   discount_value: number;
   payment_method: PaymentMethod;
+  amount_received: number | null; // null means full payment
   customer_id: string | null;
   customer_name: string | null;
+  saving: boolean;
 
   // Actions
   addItem: (product: {
@@ -25,8 +28,10 @@ interface CartState {
   updateQuantity: (id: string, quantity: number) => void;
   setDiscount: (type: "percentage" | "flat", value: number) => void;
   setPaymentMethod: (method: PaymentMethod) => void;
+  setAmountReceived: (amount: number | null) => void;
   setCustomer: (id: string | null, name: string | null) => void;
   clearCart: () => void;
+  saveBill: (billNumber: string) => Promise<Bill | null>;
 
   // Computed (as functions)
   getSubtotal: () => number;
@@ -36,6 +41,7 @@ interface CartState {
   getCGST: () => number;
   getSGST: () => number;
   getTotal: () => number;
+  getBalanceDue: () => number;
 }
 
 export const useCartStore = create<CartState>((set, get) => ({
@@ -43,8 +49,10 @@ export const useCartStore = create<CartState>((set, get) => ({
   discount_type: "percentage",
   discount_value: 0,
   payment_method: "cash",
+  amount_received: null,
   customer_id: null,
   customer_name: null,
+  saving: false,
 
   addItem: (product) => {
     const id = `cart-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
@@ -85,7 +93,16 @@ export const useCartStore = create<CartState>((set, get) => ({
   },
 
   setPaymentMethod: (method) => {
-    set({ payment_method: method });
+    // Reset amount_received when switching to khata
+    if (method === "credit") {
+      set({ payment_method: method, amount_received: null });
+    } else {
+      set({ payment_method: method });
+    }
+  },
+
+  setAmountReceived: (amount) => {
+    set({ amount_received: amount });
   },
 
   setCustomer: (id, name) => {
@@ -98,9 +115,150 @@ export const useCartStore = create<CartState>((set, get) => ({
       discount_type: "percentage",
       discount_value: 0,
       payment_method: "cash",
+      amount_received: null,
       customer_id: null,
       customer_name: null,
     });
+  },
+
+  saveBill: async (billNumber: string) => {
+    const state = get();
+    if (state.items.length === 0) return null;
+
+    set({ saving: true });
+
+    const supabase = createClient();
+    const subtotal = state.getSubtotal();
+    const discountAmount = state.getDiscountAmount();
+    const gstRate = state.getGSTRate();
+    const cgst = state.getCGST();
+    const sgst = state.getSGST();
+    const gstAmount = state.getGSTAmount();
+    const total = state.getTotal();
+    const balanceDue = state.getBalanceDue();
+
+    // Determine effective payment method for the bill record
+    // If partial payment via cash/upi, the bill is still recorded as cash/upi
+    const billPaymentMethod = state.payment_method;
+
+    try {
+      // 1. Insert bill
+      const { data: billData, error: billError } = await supabase
+        .from("bills")
+        .insert({
+          bill_number: billNumber,
+          customer_id: state.customer_id,
+          customer_name: state.customer_name,
+          subtotal,
+          discount_type: state.discount_type,
+          discount_value: state.discount_value,
+          discount_amount: discountAmount,
+          gst_rate: gstRate,
+          cgst_amount: cgst,
+          sgst_amount: sgst,
+          gst_amount: gstAmount,
+          total,
+          payment_method: billPaymentMethod,
+          status: balanceDue > 0 ? "pending" : "completed",
+        })
+        .select()
+        .single();
+
+      if (billError) throw billError;
+
+      // 2. Insert bill items
+      const billItems = state.items.map((item) => ({
+        bill_id: billData.id,
+        product_id: item.product_id,
+        product_name: item.product_name,
+        quantity: item.quantity,
+        unit: item.unit,
+        unit_price: item.unit_price,
+        subtotal: item.subtotal,
+      }));
+
+      const { error: itemsError } = await supabase
+        .from("bill_items")
+        .insert(billItems);
+
+      if (itemsError) throw itemsError;
+
+      // 3. If there's a balance due (partial payment or full khata), update customer outstanding balance
+      if (balanceDue > 0 && state.customer_id) {
+        const { data: custData } = await supabase
+          .from("customers")
+          .select("outstanding_balance")
+          .eq("id", state.customer_id)
+          .single();
+
+        if (custData) {
+          const newBalance = Number(custData.outstanding_balance) + balanceDue;
+          await supabase
+            .from("customers")
+            .update({ outstanding_balance: newBalance })
+            .eq("id", state.customer_id);
+        }
+
+        // 4. Insert payment record for the upfront amount paid (if any)
+        const paidAmount = total - balanceDue;
+        if (paidAmount > 0) {
+          await supabase.from("payments").insert({
+            customer_id: state.customer_id,
+            amount: paidAmount,
+            payment_method: billPaymentMethod,
+            notes: `Upfront payment for Bill ${billNumber}`,
+          });
+        }
+      }
+
+      // Build the saved bill object for receipt printing
+      const savedBill: Bill = {
+        id: billData.id,
+        bill_number: billNumber,
+        customer_id: state.customer_id,
+        customer_name: state.customer_name,
+        items: state.items.map((item) => ({
+          id: item.id,
+          bill_id: billData.id,
+          product_id: item.product_id,
+          product_name: item.product_name,
+          quantity: item.quantity,
+          unit: item.unit,
+          unit_price: item.unit_price,
+          subtotal: item.subtotal,
+        })),
+        subtotal,
+        discount_type: state.discount_type,
+        discount_value: state.discount_value,
+        discount_amount: discountAmount,
+        gst_rate: gstRate,
+        cgst_amount: cgst,
+        sgst_amount: sgst,
+        gst_amount: gstAmount,
+        total,
+        payment_method: billPaymentMethod,
+        status: balanceDue > 0 ? "pending" : "completed",
+        created_at: billData.created_at,
+      };
+
+      // Clear cart after successful save
+      set({
+        items: [],
+        discount_type: "percentage",
+        discount_value: 0,
+        payment_method: "cash",
+        amount_received: null,
+        customer_id: null,
+        customer_name: null,
+        saving: false,
+      });
+
+      return savedBill;
+    } catch (error) {
+      console.error("Failed to save bill:", error);
+      set({ saving: false });
+      throw error;
+    }
   },
 
   getSubtotal: () => {
@@ -117,10 +275,7 @@ export const useCartStore = create<CartState>((set, get) => ({
   },
 
   getGSTRate: () => {
-    const subtotal = get().getSubtotal();
-    const discount = get().getDiscountAmount();
-    const taxableAmount = subtotal - discount;
-    return taxableAmount < 1000 ? 5 : 12;
+    return 5;
   },
 
   getGSTAmount: () => {
@@ -144,5 +299,21 @@ export const useCartStore = create<CartState>((set, get) => ({
     const discount = get().getDiscountAmount();
     const gst = get().getGSTAmount();
     return subtotal - discount + gst;
+  },
+
+  getBalanceDue: () => {
+    const state = get();
+    const total = state.getTotal();
+
+    // Full khata — entire amount is due
+    if (state.payment_method === "credit") return total;
+
+    // Cash/UPI with amount_received specified
+    if (state.amount_received !== null && state.amount_received < total) {
+      return Math.max(0, total - state.amount_received);
+    }
+
+    // Fully paid
+    return 0;
   },
 }));

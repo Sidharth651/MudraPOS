@@ -6,6 +6,7 @@ import { useProducts } from "@/lib/hooks";
 import { useUIStore } from "@/stores/ui-store";
 import { ProductTable } from "@/components/inventory/product-table";
 import { ProductFormDrawer } from "@/components/inventory/product-form-drawer";
+import { CategoryManagerDrawer } from "@/components/inventory/category-manager-drawer";
 
 export default function InventoryPage() {
   const { openDrawer } = useUIStore();
@@ -26,13 +27,21 @@ export default function InventoryPage() {
             Manage your fabric inventory
           </p>
         </div>
-        <button
-          onClick={() => openDrawer("add-product")}
-          className="flex items-center gap-2 px-4 py-2.5 bg-primary text-white rounded-xl text-sm font-semibold hover:bg-primary-dark transition-colors shadow-sm"
-        >
-          <Plus className="w-4 h-4" />
-          Add New Fabric
-        </button>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => openDrawer("manage-categories")}
+            className="flex items-center gap-2 px-4 py-2.5 bg-white border border-border text-text-primary rounded-xl text-sm font-semibold hover:bg-surface transition-colors shadow-sm"
+          >
+            Manage Categories
+          </button>
+          <button
+            onClick={() => openDrawer("add-product")}
+            className="flex items-center gap-2 px-4 py-2.5 bg-primary text-white rounded-xl text-sm font-semibold hover:bg-primary-dark transition-colors shadow-sm"
+          >
+            <Plus className="w-4 h-4" />
+            Add New Fabric
+          </button>
+        </div>
       </div>
 
       {/* Stats */}
@@ -65,6 +74,7 @@ export default function InventoryPage() {
 
       {/* Drawer */}
       <ProductFormDrawer />
+      <CategoryManagerDrawer />
     </div>
   );
 }

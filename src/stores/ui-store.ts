@@ -7,6 +7,7 @@ import { create } from "zustand";
 export type DrawerContent =
   | "add-product"
   | "edit-product"
+  | "manage-categories"
   | "add-customer"
   | "edit-customer"
   | "add-payment"

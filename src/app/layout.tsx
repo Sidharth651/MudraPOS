@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { Providers } from "@/components/providers";
 import { AppShell } from "@/components/layout/app-shell";
+import { AuthGuard } from "@/components/auth/auth-guard";
 
 export const metadata: Metadata = {
   title: "MudraPOS — Retail Fabric POS",
@@ -19,7 +20,9 @@ export default function RootLayout({
     <html lang="en" className="h-full">
       <body className="min-h-full font-sans antialiased">
         <Providers>
-          <AppShell>{children}</AppShell>
+          <AuthGuard>
+            <AppShell>{children}</AppShell>
+          </AuthGuard>
         </Providers>
       </body>
     </html>

@@ -87,9 +87,6 @@ CREATE TABLE IF NOT EXISTS staff (
 CREATE TABLE IF NOT EXISTS settings (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   shop_name TEXT DEFAULT 'MudraPOS',
-  address TEXT DEFAULT '',
-  gstin TEXT DEFAULT '',
-  phone TEXT DEFAULT '',
   gst_low_threshold NUMERIC(10, 2) DEFAULT 1000,
   gst_low_rate NUMERIC(5, 2) DEFAULT 5,
   gst_high_rate NUMERIC(5, 2) DEFAULT 12,

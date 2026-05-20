@@ -11,12 +11,14 @@ import {
   Menu,
   X,
   IndianRupee,
+  FileText,
 } from "lucide-react";
 import { useUIStore } from "@/stores/ui-store";
 import { cn } from "@/lib/utils";
 
 const navItems = [
   { href: "/pos", label: "Billing", icon: ShoppingCart },
+  { href: "/invoices", label: "Invoices", icon: FileText },
   { href: "/inventory", label: "Inventory", icon: Package },
   { href: "/customers", label: "Khata", icon: Users },
   { href: "/reports", label: "Reports", icon: BarChart3 },

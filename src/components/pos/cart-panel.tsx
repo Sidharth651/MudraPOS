@@ -5,8 +5,14 @@ import { useCartStore } from "@/stores/cart-store";
 import { formatINR, cn } from "@/lib/utils";
 import { PaymentBar } from "./payment-bar";
 import { CustomerSelector } from "./customer-selector";
+import type { Bill } from "@/types/database";
 
-export function CartPanel() {
+interface CartPanelProps {
+  billNumber: string;
+  onBillSaved: (bill: Bill) => void;
+}
+
+export function CartPanel({ billNumber, onBillSaved }: CartPanelProps) {
   const {
     items,
     discount_type,
@@ -38,7 +44,7 @@ export function CartPanel() {
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-border">
         <div className="flex items-center gap-2">
-          <h2 className="text-base font-semibold text-text-primary">Current Bill</h2>
+          <h2 className="text-base font-semibold text-text-primary">Order Details</h2>
           {items.length > 0 && (
             <span className="text-xs bg-primary text-white px-2 py-0.5 rounded-full font-medium">
               {items.length}
@@ -196,10 +202,6 @@ export function CartPanel() {
               <span>SGST ({gstRate / 2}%)</span>
               <span>{formatINR(sgst)}</span>
             </div>
-            <div className="flex justify-between text-xs text-text-muted">
-              <span>GST @ {gstRate}%</span>
-              <span>{formatINR(gstAmount)}</span>
-            </div>
             <div className="border-t border-border pt-2 flex justify-between">
               <span className="text-base font-bold text-text-primary">Total</span>
               <span className="text-lg font-bold text-primary">{formatINR(total)}</span>
@@ -209,7 +211,13 @@ export function CartPanel() {
       )}
 
       {/* Payment Bar */}
-      {items.length > 0 && <PaymentBar total={total} />}
+      {items.length > 0 && (
+        <PaymentBar
+          total={total}
+          billNumber={billNumber}
+          onBillSaved={onBillSaved}
+        />
+      )}
     </div>
   );
 }
