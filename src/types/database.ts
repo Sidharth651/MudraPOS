@@ -1,0 +1,160 @@
+// ============================================================
+// KapdaKart POS — Database Types
+// ============================================================
+
+export type Category = "fabric" | "shirts" | "pants" | "accessories";
+
+export type PaymentMethod = "cash" | "upi" | "card" | "split" | "credit";
+
+export type StaffRole = "owner" | "manager" | "billing";
+
+export type BillStatus = "completed" | "pending" | "cancelled";
+
+export type Unit = "metre" | "piece";
+
+// ── Products ────────────────────────────────────────────────
+
+export interface Product {
+  id: string;
+  name: string;
+  category: Category;
+  price_per_unit: number;
+  unit: Unit;
+  hsn_code: string;
+  created_at: string;
+}
+
+// ── Customers ───────────────────────────────────────────────
+
+export interface Customer {
+  id: string;
+  name: string;
+  phone: string;
+  address: string;
+  outstanding_balance: number;
+  created_at: string;
+}
+
+// ── Bills ───────────────────────────────────────────────────
+
+export interface BillItem {
+  id: string;
+  bill_id: string;
+  product_id: string;
+  product_name: string;
+  quantity: number;
+  unit: Unit;
+  unit_price: number;
+  subtotal: number;
+}
+
+export interface Bill {
+  id: string;
+  bill_number: string;
+  customer_id: string | null;
+  customer_name: string | null;
+  items: BillItem[];
+  subtotal: number;
+  discount_type: "percentage" | "flat";
+  discount_value: number;
+  discount_amount: number;
+  gst_rate: number;
+  cgst_amount: number;
+  sgst_amount: number;
+  gst_amount: number;
+  total: number;
+  payment_method: PaymentMethod;
+  status: BillStatus;
+  created_at: string;
+}
+
+// ── Payments (Khata) ────────────────────────────────────────
+
+export interface Payment {
+  id: string;
+  customer_id: string;
+  amount: number;
+  payment_method: PaymentMethod;
+  notes: string;
+  created_at: string;
+}
+
+// ── Settings ────────────────────────────────────────────────
+
+export interface GSTConfig {
+  low_threshold: number;
+  low_rate: number;
+  high_rate: number;
+}
+
+export interface ShopSettings {
+  id: string;
+  shop_name: string;
+  address: string;
+  gstin: string;
+  phone: string;
+  gst_config: GSTConfig;
+  printer_enabled: boolean;
+  whatsapp_enabled: boolean;
+  whatsapp_number: string;
+  low_stock_threshold: number;
+}
+
+// ── Staff ───────────────────────────────────────────────────
+
+export interface Staff {
+  id: string;
+  name: string;
+  role: StaffRole;
+  email: string;
+  is_active: boolean;
+  created_at: string;
+}
+
+// ── Cart (client-side only) ─────────────────────────────────
+
+export interface CartItem {
+  id: string;
+  product_id: string;
+  product_name: string;
+  quantity: number;
+  unit: Unit;
+  unit_price: number;
+  subtotal: number;
+}
+
+// ── Reports ─────────────────────────────────────────────────
+
+export interface DailySummary {
+  total_sales: number;
+  cash_collected: number;
+  upi_collected: number;
+  card_collected: number;
+  khata_credit: number;
+  items_sold: number;
+  bills_count: number;
+}
+
+export interface TopProduct {
+  product_id: string;
+  product_name: string;
+  quantity_sold: number;
+  revenue: number;
+}
+
+export interface SalesBreakdown {
+  label: string;
+  amount: number;
+  color: string;
+}
+
+// ── Ledger Entry ────────────────────────────────────────────
+
+export interface LedgerEntry {
+  id: string;
+  type: "purchase" | "payment";
+  date: string;
+  description: string;
+  amount: number;
+  balance_after: number;
+}

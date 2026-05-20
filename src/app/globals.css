@@ -1,0 +1,195 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+@import "tailwindcss";
+
+@theme inline {
+  --color-background: #ffffff;
+  --color-foreground: #1F2937;
+  --color-primary: #0D6E6E;
+  --color-primary-light: #E0F2F1;
+  --color-primary-dark: #0A5555;
+  --color-primary-50: #E6F4F4;
+  --color-primary-100: #CCE9E9;
+  --color-primary-200: #99D3D3;
+  --color-primary-600: #0B5E5E;
+  --color-primary-700: #094E4E;
+  --color-primary-800: #073E3E;
+  --color-amber: #F59E0B;
+  --color-amber-light: #FEF3C7;
+  --color-amber-dark: #D97706;
+  --color-green: #16A34A;
+  --color-green-light: #DCFCE7;
+  --color-green-dark: #15803D;
+  --color-red: #DC2626;
+  --color-red-light: #FEE2E2;
+  --color-red-dark: #B91C1C;
+  --color-purple: #7C3AED;
+  --color-blue: #2563EB;
+  --color-surface: #F8FAFB;
+  --color-surface-hover: #F1F5F5;
+  --color-border: #E5E7EB;
+  --color-border-dark: #D1D5DB;
+  --color-text-primary: #1F2937;
+  --color-text-muted: #6B7280;
+  --color-text-light: #9CA3AF;
+  --color-sidebar: #F8FAFB;
+  --color-sidebar-hover: #E6F4F4;
+  --color-sidebar-active: #0D6E6E;
+  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+/* ── Base ─────────────────────────────────────────────────── */
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  height: 100%;
+}
+
+body {
+  background: var(--color-background);
+  color: var(--color-foreground);
+  font-family: var(--font-sans);
+  min-height: 100%;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ── Scrollbar ────────────────────────────────────────────── */
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #D1D5DB;
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #9CA3AF;
+}
+
+/* ── Focus ────────────────────────────────────────────────── */
+
+*:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+/* ── Print ────────────────────────────────────────────────── */
+
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  body {
+    background: white;
+    color: black;
+  }
+}
+
+/* ── Number Input Spinners ────────────────────────────────── */
+
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+input[type="number"] {
+  -moz-appearance: textfield;
+}
+
+/* ── Drawer Animation ─────────────────────────────────────── */
+
+@keyframes slideInRight {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+@keyframes slideOutRight {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes fadeOut {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+.drawer-enter {
+  animation: slideInRight 0.3s ease-out forwards;
+}
+
+.drawer-exit {
+  animation: slideOutRight 0.25s ease-in forwards;
+}
+
+.overlay-enter {
+  animation: fadeIn 0.3s ease-out forwards;
+}
+
+.overlay-exit {
+  animation: fadeOut 0.25s ease-in forwards;
+}
+
+/* ── Modal Animation ──────────────────────────────────────── */
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.modal-enter {
+  animation: scaleIn 0.2s ease-out forwards;
+}
+
+/* ── Pulse Animation ──────────────────────────────────────── */
+
+@keyframes pulse-soft {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+.animate-pulse-soft {
+  animation: pulse-soft 2s ease-in-out infinite;
+}
