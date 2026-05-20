@@ -1,6 +1,9 @@
 "use client";
 
-import { Plus, ArrowLeft, Phone, MapPin } from "lucide-react";
+import { useState } from "react";
+import { Plus, ArrowLeft, Phone, MapPin, Trash2 } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
+import { createClient } from "@/lib/supabase/client";
 import { useCustomers, useLedgerEntries } from "@/lib/hooks";
 import { formatINR, formatDateTime, cn } from "@/lib/utils";
 import { useUIStore } from "@/stores/ui-store";
@@ -9,6 +12,53 @@ export function CustomerLedger() {
   const { selectedCustomerId, setSelectedCustomerId, openDrawer } = useUIStore();
   const { data: customers } = useCustomers();
   const { data: ledgerEntries } = useLedgerEntries(selectedCustomerId || "");
+  const queryClient = useQueryClient();
+  const [isDeleting, setIsDeleting] = useState<string | null>(null);
+
+  const handleDeleteEntry = async (id: string, type: "purchase" | "payment") => {
+    if (!window.confirm(`Are you sure you want to delete this ${type}?`)) return;
+    setIsDeleting(id);
+
+    try {
+      const supabase = createClient();
+      const table = type === "purchase" ? "bills" : "payments";
+      
+      const { error: deleteError } = await supabase.from(table).delete().eq("id", id);
+      if (deleteError) throw deleteError;
+
+      if (selectedCustomerId) {
+        const { data: bData } = await supabase
+          .from("bills")
+          .select("total, status")
+          .eq("customer_id", selectedCustomerId)
+          .or("payment_method.eq.credit,status.eq.pending");
+        
+        const { data: pData } = await supabase
+          .from("payments")
+          .select("amount")
+          .eq("customer_id", selectedCustomerId);
+        
+        let newBalance = 0;
+        bData?.forEach(b => newBalance += Number(b.total));
+        pData?.forEach(p => newBalance -= Number(p.amount));
+
+        await supabase
+          .from("customers")
+          .update({ outstanding_balance: newBalance })
+          .eq("id", selectedCustomerId);
+      }
+
+      await queryClient.invalidateQueries({ queryKey: ["customers"] });
+      await queryClient.invalidateQueries({ queryKey: ["ledger"] });
+      await queryClient.invalidateQueries({ queryKey: ["bills"] });
+      await queryClient.invalidateQueries({ queryKey: ["dailySummary"] });
+    } catch (error) {
+      console.error("Failed to delete entry:", error);
+      alert("Failed to delete entry. Please try again.");
+    } finally {
+      setIsDeleting(null);
+    }
+  };
 
   if (!selectedCustomerId) {
     return (
@@ -128,15 +178,25 @@ export function CustomerLedger() {
                         </p>
                       </div>
                       <div className="text-right flex-shrink-0">
-                        <p
-                          className={cn(
-                            "text-sm font-semibold",
-                            isPurchase ? "text-red" : "text-green"
-                          )}
-                        >
-                          {isPurchase ? "+" : "-"}{formatINR(entry.amount)}
-                        </p>
-                        <p className="text-xs text-text-muted">
+                        <div className="flex items-center justify-end gap-2">
+                          <p
+                            className={cn(
+                              "text-sm font-semibold",
+                              isPurchase ? "text-red" : "text-green"
+                            )}
+                          >
+                            {isPurchase ? "+" : "-"}{formatINR(entry.amount)}
+                          </p>
+                          <button
+                            onClick={() => handleDeleteEntry(entry.id, entry.type)}
+                            disabled={isDeleting === entry.id}
+                            className="text-text-muted hover:text-red transition-colors p-1 rounded-md hover:bg-red-light disabled:opacity-50"
+                            title="Delete entry"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                        <p className="text-xs text-text-muted mt-1">
                           Bal: {formatINR(entry.balance_after)}
                         </p>
                       </div>
