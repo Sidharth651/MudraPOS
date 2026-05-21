@@ -7,6 +7,7 @@ import { useUIStore } from "@/stores/ui-store";
 import { formatINR } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
 import type { Customer } from "@/types/database";
+import toast from "react-hot-toast";
 
 export function PaymentFormDrawer() {
   const { drawerOpen, drawerContent, drawerData, closeDrawer } = useUIStore();
@@ -23,6 +24,7 @@ export function PaymentFormDrawer() {
     if (!amount || parseFloat(amount) <= 0 || !customer) return;
 
     setSaving(true);
+    const toastId = toast.loading("Recording payment...");
     try {
       const supabase = createClient();
       const paymentAmount = parseFloat(amount);
@@ -53,9 +55,10 @@ export function PaymentFormDrawer() {
       setAmount("");
       setMethod("cash");
       setNotes("");
+      toast.success("Payment recorded successfully.", { id: toastId });
     } catch (error) {
       console.error("Failed to record payment:", error);
-      alert("Failed to record payment. Please try again.");
+      toast.error("Failed to record payment. Please try again.", { id: toastId });
     } finally {
       setSaving(false);
     }

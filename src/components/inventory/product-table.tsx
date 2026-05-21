@@ -4,7 +4,9 @@ import { useProducts, useSupabase } from "@/lib/hooks";
 import { formatINR } from "@/lib/utils";
 import { useUIStore } from "@/stores/ui-store";
 import { Pencil, Trash2 } from "lucide-react";
+import { confirmToast } from "@/lib/toast-utils";
 import { useQueryClient } from "@tanstack/react-query";
+import toast from "react-hot-toast";
 
 interface ProductTableProps {
   searchQuery: string;
@@ -26,16 +28,19 @@ export function ProductTable({ searchQuery }: ProductTableProps) {
     );
   }
 
-  const handleDelete = async (id: string, name: string) => {
-    if (!window.confirm(`Delete "${name}"?`)) return;
-    try {
-      const { error } = await supabase.from("products").delete().eq("id", id);
-      if (error) throw error;
-      queryClient.invalidateQueries({ queryKey: ["products"] });
-    } catch (error) {
-      console.error("Error deleting product:", error);
-      alert("Failed to delete product");
-    }
+  const handleDelete = (id: string, name: string) => {
+    confirmToast(`Are you sure you want to delete "${name}"?`, async () => {
+      const toastId = toast.loading("Deleting product...");
+      try {
+        const { error } = await supabase.from("products").delete().eq("id", id);
+        if (error) throw error;
+        queryClient.invalidateQueries({ queryKey: ["products"] });
+        toast.success("Product deleted successfully.", { id: toastId });
+      } catch (error) {
+        console.error("Error deleting product:", error);
+        toast.error("Failed to delete product.", { id: toastId });
+      }
+    });
   };
 
   return (

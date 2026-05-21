@@ -8,6 +8,7 @@ import { CustomerFormDrawer } from "@/components/customers/customer-form-drawer"
 import { BillReceipt } from "@/components/pos/bill-receipt";
 import { useNextBillNumber } from "@/lib/hooks";
 import { useSettings } from "@/lib/hooks";
+import { useCartStore } from "@/stores/cart-store";
 import type { Bill } from "@/types/database";
 
 export default function POSPage() {
@@ -17,21 +18,48 @@ export default function POSPage() {
 
   const handleBillSaved = useCallback((bill: Bill) => {
     setLastSavedBill(bill);
-    // Auto-open print dialog after a short delay to let state update
-    setTimeout(() => {
-      window.print();
-    }, 300);
   }, []);
 
   const displayBillNumber = billLoading ? "..." : billNumber || "INV-0001";
+  const cartState = useCartStore();
+
+  const currentBill: Bill = lastSavedBill || {
+    id: "temp",
+    bill_number: displayBillNumber,
+    customer_id: cartState.customer_id,
+    customer_name: cartState.customer_name,
+    items: cartState.items.map((item) => ({
+      id: item.id,
+      bill_id: "temp",
+      product_id: item.product_id,
+      product_name: item.product_name,
+      quantity: item.quantity,
+      unit: item.unit,
+      unit_price: item.unit_price,
+      subtotal: item.subtotal,
+      hsn_code: item.hsn_code,
+    })),
+    subtotal: cartState.getSubtotal(),
+    discount_type: cartState.discount_type,
+    discount_value: cartState.discount_value,
+    discount_amount: cartState.getDiscountAmount(),
+    gst_rate: cartState.getGSTRate(),
+    cgst_amount: cartState.getCGST(),
+    sgst_amount: cartState.getSGST(),
+    gst_amount: cartState.getGSTAmount(),
+    total: cartState.getTotal(),
+    payment_method: cartState.payment_method,
+    status: "pending",
+    created_at: new Date().toISOString(),
+  };
 
   return (
     <>
-      <div className="flex flex-col lg:flex-row h-full no-print">
+      <div className="flex flex-col lg:flex-row min-h-full lg:h-full no-print">
         {/* Left — Product Selector */}
-        <div className="flex-1 lg:w-[60%] p-4 lg:p-6 overflow-y-auto min-h-[45vh] lg:min-h-0">
+        <div className="flex-none lg:flex-1 h-[50vh] lg:h-auto lg:w-[60%] p-4 lg:p-6 flex flex-col">
           {/* Header */}
-          <div className="flex items-center justify-between mb-4">
+          <div className="flex-none flex items-center justify-between mb-4">
             <div>
               <h1 className="text-xl font-bold text-text-primary flex items-center gap-2">
                 <Receipt className="w-5 h-5 text-primary" />
@@ -45,11 +73,13 @@ export default function POSPage() {
             </div>
           </div>
 
-          <ProductSelector />
+          <div className="flex-1 min-h-0">
+            <ProductSelector />
+          </div>
         </div>
 
         {/* Right — Cart */}
-        <div className="lg:w-[40%] lg:min-w-[360px] border-t lg:border-t-0 flex flex-col min-h-0 lg:h-auto max-h-[55vh] lg:max-h-none">
+        <div className="flex-none lg:flex-none lg:w-[40%] lg:min-w-[360px] border-t lg:border-t-0 flex flex-col">
           <CartPanel
             billNumber={displayBillNumber}
             onBillSaved={handleBillSaved}
@@ -61,12 +91,10 @@ export default function POSPage() {
       <CustomerFormDrawer />
 
       {/* Thermal receipt — hidden on screen, shown on print */}
-      {lastSavedBill && (
-        <BillReceipt
-          bill={lastSavedBill}
-          shopName={settings?.shop_name}
-        />
-      )}
+      <BillReceipt
+        bill={currentBill}
+        shopName={settings?.shop_name}
+      />
     </>
   );
 }

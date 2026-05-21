@@ -7,6 +7,7 @@ import { useCategories, useSupabase } from "@/lib/hooks";
 import type { Product } from "@/types/database";
 import { useQueryClient } from "@tanstack/react-query";
 import { Loader2 } from "lucide-react";
+import toast from "react-hot-toast";
 
 export function ProductFormDrawer() {
   const { drawerOpen, drawerContent, drawerData, closeDrawer } = useUIStore();
@@ -45,6 +46,7 @@ export function ProductFormDrawer() {
   const handleSave = async () => {
     if (!name || !price) return;
     setIsSubmitting(true);
+    const toastId = toast.loading(isEdit ? "Updating fabric..." : "Saving fabric...");
     try {
       const payload = {
         name: name.trim(),
@@ -64,9 +66,10 @@ export function ProductFormDrawer() {
 
       queryClient.invalidateQueries({ queryKey: ["products"] });
       closeDrawer();
+      toast.success(isEdit ? "Fabric updated successfully." : "Fabric saved successfully.", { id: toastId });
     } catch (error) {
       console.error("Error saving product:", error);
-      alert("Failed to save product");
+      toast.error("Failed to save product.", { id: toastId });
     } finally {
       setIsSubmitting(false);
     }

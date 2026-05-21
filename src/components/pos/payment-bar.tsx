@@ -6,7 +6,6 @@ import {
   Smartphone,
   BookOpen,
   Printer,
-  Share2,
   CheckCircle2,
   Loader2,
 } from "lucide-react";
@@ -79,51 +78,6 @@ export function PaymentBar({ total, billNumber, onBillSaved }: PaymentBarProps) 
 
   const handlePrintBill = () => {
     window.print();
-  };
-
-  const handleSharePDF = async () => {
-    if (!billNumber) return;
-    const element = document.getElementById("receipt-print-area");
-    if (!element) {
-      setError("Please save the bill first to share as PDF.");
-      return;
-    }
-    setError(null);
-    try {
-      // @ts-ignore
-      const html2pdf = (await import("html2pdf.js")).default;
-      element.classList.remove("receipt-print-only");
-      element.style.display = "block";
-
-      const opt: any = {
-        margin: 1,
-        filename: `bill-${billNumber}.pdf`,
-        image: { type: "jpeg", quality: 0.98 },
-        html2canvas: { scale: 2 },
-        jsPDF: { unit: "mm", format: [58, 200], orientation: "portrait" },
-      };
-
-      const pdfBlob = await html2pdf().set(opt).from(element).output("blob");
-
-      if (navigator.share) {
-        const file = new File([pdfBlob], opt.filename, {
-          type: "application/pdf",
-        });
-        await navigator.share({
-          title: "Bill Receipt",
-          text: "Here is your bill receipt",
-          files: [file],
-        });
-      } else {
-        html2pdf().set(opt).from(element).save();
-      }
-    } catch (err) {
-      console.error("Error sharing PDF:", err);
-      setError("Failed to share PDF.");
-    } finally {
-      element.style.display = "";
-      element.classList.add("receipt-print-only");
-    }
   };
 
   return (
@@ -201,40 +155,32 @@ export function PaymentBar({ total, billNumber, onBillSaved }: PaymentBarProps) 
         </div>
       )}
 
-      {/* Complete Payment */}
-      <button
-        onClick={handleCompletePayment}
-        disabled={saving}
-        className="w-full py-3 bg-primary text-white rounded-xl font-semibold text-sm hover:bg-primary-dark transition-colors shadow-sm flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
-      >
-        {saving ? (
-          <>
-            <Loader2 className="w-4 h-4 animate-spin" />
-            Saving Bill...
-          </>
-        ) : (
-          <>
-            <CheckCircle2 className="w-4 h-4" />
-            Complete Payment — {formatINR(total)}
-          </>
-        )}
-      </button>
-
-      {/* Print / WhatsApp */}
+      {/* Action Buttons */}
       <div className="flex gap-2">
         <button
           onClick={handlePrintBill}
-          className="flex-1 py-2 border border-border rounded-xl text-xs font-medium text-text-muted hover:bg-surface-hover transition-colors flex items-center justify-center gap-1.5"
+          className="flex-1 py-3 border border-border rounded-xl text-xs font-medium text-text-muted hover:bg-surface-hover transition-colors flex items-center justify-center gap-1.5"
         >
-          <Printer className="w-3.5 h-3.5" />
+          <Printer className="w-4 h-4" />
           Print Bill
         </button>
-        <button 
-          onClick={handleSharePDF}
-          className="flex-1 py-2 border border-primary rounded-xl text-xs font-medium text-primary hover:bg-primary-light transition-colors flex items-center justify-center gap-1.5"
+
+        <button
+          onClick={handleCompletePayment}
+          disabled={saving}
+          className="flex-[2] py-3 bg-primary text-white rounded-xl font-semibold text-sm hover:bg-primary-dark transition-colors shadow-sm flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
         >
-          <Share2 className="w-3.5 h-3.5" />
-          Share as PDF
+          {saving ? (
+            <>
+              <Loader2 className="w-4 h-4 animate-spin" />
+              Saving...
+            </>
+          ) : (
+            <>
+              <CheckCircle2 className="w-4 h-4" />
+              Complete — {formatINR(total)}
+            </>
+          )}
         </button>
       </div>
     </div>

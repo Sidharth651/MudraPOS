@@ -32,6 +32,7 @@ interface BillReceiptProps {
     payment_method: string;
   };
   shopName?: string;
+  preview?: boolean;
 }
 
 // ============================================================
@@ -69,7 +70,7 @@ function shortINR(amount: number): string {
 // ============================================================
 
 export const BillReceipt = forwardRef<HTMLDivElement, BillReceiptProps>(
-  function BillReceipt({ bill, shopName }, ref) {
+  function BillReceipt({ bill, shopName, preview }, ref) {
     // Only fetch client-side state after hydration by providing defaults if not ready
     // However, since this component only renders on print or in a preview after interaction, it should be safe.
     const { headerText, footerText, showHsn, printWidth } = useReceiptSettingsStore();
@@ -94,7 +95,7 @@ export const BillReceipt = forwardRef<HTMLDivElement, BillReceiptProps>(
     };
 
     return (
-      <div id="receipt-print-area" ref={ref} className="receipt-print-only" style={receiptStyle}>
+      <div id="receipt-print-area" ref={ref} className={preview ? "" : "receipt-print-only"} style={receiptStyle}>
         {/* ── Head: Estimated Invoice / Shop Name ── */}
         <div style={centerStyle}>
           <div style={{ ...boldStyle, fontSize: "16px", marginBottom: "4px" }}>

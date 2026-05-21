@@ -47,17 +47,17 @@ export function Drawer({
     <div className="fixed inset-0 z-50 flex justify-end">
       {/* Overlay */}
       <div
-        className="absolute inset-0 bg-black/30 overlay-enter"
+        className="absolute inset-0 bg-black/30 overlay-enter no-print"
         onClick={onClose}
       />
 
       {/* Drawer Panel */}
       <div
         ref={drawerRef}
-        className={`relative ${width} w-full bg-surface shadow-2xl drawer-enter flex flex-col h-full`}
+        className={`relative ${width} w-full bg-surface shadow-2xl drawer-enter flex flex-col h-full print:shadow-none print:bg-transparent`}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-border">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-border no-print">
           <h2 className="text-lg font-semibold text-text-primary">{title}</h2>
           <button
             onClick={onClose}

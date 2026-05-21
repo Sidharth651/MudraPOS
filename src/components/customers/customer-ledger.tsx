@@ -6,7 +6,9 @@ import { useQueryClient } from "@tanstack/react-query";
 import { createClient } from "@/lib/supabase/client";
 import { useCustomers, useLedgerEntries } from "@/lib/hooks";
 import { formatINR, formatDateTime, cn } from "@/lib/utils";
+import { confirmToast } from "@/lib/toast-utils";
 import { useUIStore } from "@/stores/ui-store";
+import toast from "react-hot-toast";
 
 export function CustomerLedger() {
   const { selectedCustomerId, setSelectedCustomerId, openDrawer } = useUIStore();
@@ -14,48 +16,100 @@ export function CustomerLedger() {
   const { data: ledgerEntries } = useLedgerEntries(selectedCustomerId || "");
   const queryClient = useQueryClient();
   const [isDeleting, setIsDeleting] = useState<string | null>(null);
+  const [isDeletingCustomer, setIsDeletingCustomer] = useState(false);
 
-  const handleDeleteEntry = async (id: string, type: "purchase" | "payment") => {
-    if (!window.confirm(`Are you sure you want to delete this ${type}?`)) return;
-    setIsDeleting(id);
+  const handleDeleteCustomer = () => {
+    confirmToast("Are you sure you want to delete this customer? All their bills, payments, and associated data will be permanently deleted. This action cannot be undone.", async () => {
+      setIsDeletingCustomer(true);
+      const toastId = toast.loading("Deleting customer...");
 
-    try {
-      const supabase = createClient();
-      const table = type === "purchase" ? "bills" : "payments";
-      
-      const { error: deleteError } = await supabase.from(table).delete().eq("id", id);
-      if (deleteError) throw deleteError;
-
-      if (selectedCustomerId) {
-        const { data: bData } = await supabase
-          .from("bills")
-          .select("total, status")
-          .eq("customer_id", selectedCustomerId);
+      try {
+        const supabase = createClient();
         
-        const { data: pData } = await supabase
+        // Delete all payments associated with this customer
+        const { error: paymentsError } = await supabase
           .from("payments")
-          .select("amount")
+          .delete()
           .eq("customer_id", selectedCustomerId);
-        
-        let newBalance = 0;
-        bData?.forEach(b => newBalance += Number(b.total));
-        pData?.forEach(p => newBalance -= Number(p.amount));
+          
+        if (paymentsError) throw paymentsError;
 
-        await supabase
+        // Delete all bills associated with this customer (cascades to bill_items)
+        const { error: billsError } = await supabase
+          .from("bills")
+          .delete()
+          .eq("customer_id", selectedCustomerId);
+          
+        if (billsError) throw billsError;
+
+        // Finally delete the customer
+        const { error: deleteError } = await supabase
           .from("customers")
-          .update({ outstanding_balance: newBalance })
+          .delete()
           .eq("id", selectedCustomerId);
-      }
+        
+        if (deleteError) {
+          throw deleteError;
+        }
 
-      await queryClient.invalidateQueries({ queryKey: ["customers"] });
-      await queryClient.invalidateQueries({ queryKey: ["ledger"] });
-      await queryClient.invalidateQueries({ queryKey: ["bills"] });
-    } catch (error) {
-      console.error("Failed to delete entry:", error);
-      alert("Failed to delete entry. Please try again.");
-    } finally {
-      setIsDeleting(null);
-    }
+        setSelectedCustomerId(null);
+        await queryClient.invalidateQueries({ queryKey: ["customers"] });
+        await queryClient.invalidateQueries({ queryKey: ["bills"] });
+        await queryClient.invalidateQueries({ queryKey: ["ledger"] });
+        toast.success("Customer and all associated invoices deleted successfully.", { id: toastId });
+      } catch (error) {
+        console.error("Failed to delete customer:", error);
+        toast.error("Failed to delete customer. Please try again.", { id: toastId });
+      } finally {
+        setIsDeletingCustomer(false);
+      }
+    });
+  };
+
+  const handleDeleteEntry = (id: string, type: "purchase" | "payment") => {
+    confirmToast(`Are you sure you want to delete this ${type}?`, async () => {
+      setIsDeleting(id);
+      const toastId = toast.loading(`Deleting ${type}...`);
+
+      try {
+        const supabase = createClient();
+        const table = type === "purchase" ? "bills" : "payments";
+        
+        const { error: deleteError } = await supabase.from(table).delete().eq("id", id);
+        if (deleteError) throw deleteError;
+
+        if (selectedCustomerId) {
+          const { data: bData } = await supabase
+            .from("bills")
+            .select("total, status")
+            .eq("customer_id", selectedCustomerId);
+          
+          const { data: pData } = await supabase
+            .from("payments")
+            .select("amount")
+            .eq("customer_id", selectedCustomerId);
+          
+          let newBalance = 0;
+          bData?.forEach(b => newBalance += Number(b.total));
+          pData?.forEach(p => newBalance -= Number(p.amount));
+
+          await supabase
+            .from("customers")
+            .update({ outstanding_balance: newBalance })
+            .eq("id", selectedCustomerId);
+        }
+
+        await queryClient.invalidateQueries({ queryKey: ["customers"] });
+        await queryClient.invalidateQueries({ queryKey: ["ledger"] });
+        await queryClient.invalidateQueries({ queryKey: ["bills"] });
+        toast.success(`${type === "purchase" ? "Purchase" : "Payment"} deleted successfully.`, { id: toastId });
+      } catch (error) {
+        console.error("Failed to delete entry:", error);
+        toast.error("Failed to delete entry. Please try again.", { id: toastId });
+      } finally {
+        setIsDeleting(null);
+      }
+    });
   };
 
   if (!selectedCustomerId) {
@@ -98,6 +152,14 @@ export function CustomerLedger() {
                 title="Edit Customer"
               >
                 <Edit className="w-4 h-4" />
+              </button>
+              <button
+                onClick={handleDeleteCustomer}
+                disabled={isDeletingCustomer}
+                className="p-1 rounded-md text-text-muted hover:text-red hover:bg-red-light transition-colors disabled:opacity-50"
+                title="Delete Customer"
+              >
+                <Trash2 className="w-4 h-4" />
               </button>
             </div>
             <div className="flex items-center gap-1 text-xs text-text-muted mt-1">

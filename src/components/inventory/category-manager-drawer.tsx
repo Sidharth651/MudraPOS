@@ -6,6 +6,8 @@ import { useUIStore } from "@/stores/ui-store";
 import { useCategories, useSupabase } from "@/lib/hooks";
 import { Pencil, Trash2, Plus, Loader2 } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
+import { confirmToast } from "@/lib/toast-utils";
+import toast from "react-hot-toast";
 
 export function CategoryManagerDrawer() {
   const { drawerOpen, drawerContent, closeDrawer } = useUIStore();
@@ -23,14 +25,16 @@ export function CategoryManagerDrawer() {
   const handleAddCategory = async () => {
     if (!newCategoryName.trim()) return;
     setIsSubmitting(true);
+    const toastId = toast.loading("Adding category...");
     try {
       const { error } = await supabase.from("categories").insert([{ name: newCategoryName.trim() }]);
       if (error) throw error;
       setNewCategoryName("");
       queryClient.invalidateQueries({ queryKey: ["categories"] });
+      toast.success("Category added successfully.", { id: toastId });
     } catch (error) {
       console.error("Error adding category:", error);
-      alert("Failed to add category");
+      toast.error("Failed to add category.", { id: toastId });
     } finally {
       setIsSubmitting(false);
     }
@@ -39,32 +43,37 @@ export function CategoryManagerDrawer() {
   const handleUpdateCategory = async (id: string) => {
     if (!editName.trim()) return;
     setIsSubmitting(true);
+    const toastId = toast.loading("Updating category...");
     try {
       const { error } = await supabase.from("categories").update({ name: editName.trim() }).eq("id", id);
       if (error) throw error;
       setEditingId(null);
       queryClient.invalidateQueries({ queryKey: ["categories"] });
+      toast.success("Category updated successfully.", { id: toastId });
     } catch (error) {
       console.error("Error updating category:", error);
-      alert("Failed to update category");
+      toast.error("Failed to update category.", { id: toastId });
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const handleDeleteCategory = async (id: string) => {
-    if (!window.confirm("Are you sure you want to delete this category?")) return;
-    setIsSubmitting(true);
-    try {
-      const { error } = await supabase.from("categories").delete().eq("id", id);
-      if (error) throw error;
-      queryClient.invalidateQueries({ queryKey: ["categories"] });
-    } catch (error) {
-      console.error("Error deleting category:", error);
-      alert("Failed to delete category");
-    } finally {
-      setIsSubmitting(false);
-    }
+  const handleDeleteCategory = (id: string) => {
+    confirmToast("Are you sure you want to delete this category?", async () => {
+      setIsSubmitting(true);
+      const toastId = toast.loading("Deleting category...");
+      try {
+        const { error } = await supabase.from("categories").delete().eq("id", id);
+        if (error) throw error;
+        queryClient.invalidateQueries({ queryKey: ["categories"] });
+        toast.success("Category deleted successfully.", { id: toastId });
+      } catch (error) {
+        console.error("Error deleting category:", error);
+        toast.error("Failed to delete category.", { id: toastId });
+      } finally {
+        setIsSubmitting(false);
+      }
+    });
   };
 
   return (

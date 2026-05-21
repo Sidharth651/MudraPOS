@@ -7,6 +7,7 @@ import { useUIStore } from "@/stores/ui-store";
 import { createClient } from "@/lib/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
 import { useCartStore } from "@/stores/cart-store";
+import toast from "react-hot-toast";
 
 export function CustomerFormDrawer() {
   const { drawerOpen, drawerContent, drawerData, closeDrawer } = useUIStore();
@@ -35,9 +36,10 @@ export function CustomerFormDrawer() {
   }, [isOpen, isEdit, drawerData]);
 
   const handleSave = async () => {
-    if (!name.trim() || !phone.trim()) return;
+    if (!name.trim()) return;
     setSaving(true);
     setError(null);
+    const toastId = toast.loading(isEdit ? "Updating customer..." : "Saving customer...");
 
     const supabase = createClient();
     let dbError, newCustomer;
@@ -73,9 +75,12 @@ export function CustomerFormDrawer() {
     setSaving(false);
 
     if (dbError) {
+      toast.error("Failed to save customer. Please try again.", { id: toastId });
       setError("Failed to save customer. Please try again.");
       return;
     }
+
+    toast.success(isEdit ? "Customer updated successfully." : "Customer saved successfully.", { id: toastId });
 
     if (newCustomer) {
       setCustomer(newCustomer.id, newCustomer.name);
@@ -113,7 +118,7 @@ export function CustomerFormDrawer() {
 
         <div>
           <label className={labelClass}>
-            Phone <span className="text-red">*</span>
+            Phone
           </label>
           <input
             type="tel"
@@ -143,7 +148,7 @@ export function CustomerFormDrawer() {
 
         <button
           onClick={handleSave}
-          disabled={!name.trim() || !phone.trim() || saving}
+          disabled={!name.trim() || saving}
           className="w-full mt-4 py-3 bg-primary text-white rounded-xl font-semibold text-sm hover:bg-primary-dark transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
         >
           {saving ? (
