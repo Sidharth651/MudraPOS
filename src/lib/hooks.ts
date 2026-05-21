@@ -6,9 +6,6 @@ import type {
   Bill,
   Staff,
   ShopSettings,
-  DailySummary,
-  SalesBreakdown,
-  TopProduct,
   LedgerEntry,
   Category,
 } from "@/types/database";
@@ -117,66 +114,6 @@ export function useBills() {
         .order("created_at", { ascending: false });
       if (error) throw error;
       return data as Bill[];
-    },
-  });
-}
-
-export function useDailySummary() {
-  const { data: bills } = useBills();
-  
-  return useQuery({
-    queryKey: ["dailySummary", bills?.length], // Refetch when bills change
-    queryFn: () => {
-      const todayBills = bills || []; // In a real app, filter by today
-      let total_sales = 0;
-      let cash_collected = 0;
-      let upi_collected = 0;
-      let khata_credit = 0;
-      
-      todayBills.forEach(b => {
-        total_sales += Number(b.total);
-        if (b.payment_method === 'cash') cash_collected += Number(b.total);
-        else if (b.payment_method === 'upi') upi_collected += Number(b.total);
-        else if (b.payment_method === 'credit') khata_credit += Number(b.total);
-      });
-      
-      return {
-        total_sales,
-        cash_collected,
-        upi_collected,
-        khata_credit,
-        items_sold: todayBills.length, // approximation
-        bills_count: todayBills.length,
-      } as DailySummary;
-    },
-    enabled: !!bills,
-  });
-}
-
-export function useSalesBreakdown() {
-  const { data: summary } = useDailySummary();
-  return useQuery({
-    queryKey: ["salesBreakdown", summary],
-    queryFn: () => {
-      if (!summary) return [];
-      return [
-        { label: "Cash", amount: summary.cash_collected, color: "#16A34A" },
-        { label: "UPI", amount: summary.upi_collected, color: "#7C3AED" },
-        { label: "Credit (Khata)", amount: summary.khata_credit, color: "#F59E0B" },
-      ] as SalesBreakdown[];
-    },
-    enabled: !!summary,
-  });
-}
-
-export function useTopProducts() {
-
-  return useQuery({
-    queryKey: ["topProducts"],
-    queryFn: async () => {
-      // For now, return empty as bill_items are not seeded properly yet
-      // A real implementation would aggregate over bill_items
-      return [] as TopProduct[];
     },
   });
 }

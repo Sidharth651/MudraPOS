@@ -126,29 +126,6 @@ export interface CartItem {
   hsn_code?: string;
 }
 
-// ── Reports ─────────────────────────────────────────────────
-
-export interface DailySummary {
-  total_sales: number;
-  cash_collected: number;
-  upi_collected: number;
-  khata_credit: number;
-  items_sold: number;
-  bills_count: number;
-}
-
-export interface TopProduct {
-  product_id: string;
-  product_name: string;
-  quantity_sold: number;
-  revenue: number;
-}
-
-export interface SalesBreakdown {
-  label: string;
-  amount: number;
-  color: string;
-}
 
 // ── Ledger Entry ────────────────────────────────────────────
 

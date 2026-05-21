@@ -50,7 +50,6 @@ export function CustomerLedger() {
       await queryClient.invalidateQueries({ queryKey: ["customers"] });
       await queryClient.invalidateQueries({ queryKey: ["ledger"] });
       await queryClient.invalidateQueries({ queryKey: ["bills"] });
-      await queryClient.invalidateQueries({ queryKey: ["dailySummary"] });
     } catch (error) {
       console.error("Failed to delete entry:", error);
       alert("Failed to delete entry. Please try again.");

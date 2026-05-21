@@ -6,7 +6,6 @@ import {
   ShoppingCart,
   Package,
   Users,
-  BarChart3,
   Settings,
   Menu,
   X,
@@ -21,7 +20,6 @@ const navItems = [
   { href: "/invoices", label: "Invoices", icon: FileText },
   { href: "/inventory", label: "Inventory", icon: Package },
   { href: "/customers", label: "Khata", icon: Users },
-  { href: "/reports", label: "Reports", icon: BarChart3 },
   { href: "/settings", label: "Settings", icon: Settings },
 ];
 

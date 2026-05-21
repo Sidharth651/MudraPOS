@@ -68,8 +68,6 @@ export function PaymentBar({ total, billNumber, onBillSaved }: PaymentBarProps) 
         queryClient.invalidateQueries({ queryKey: ["customers"] });
         queryClient.invalidateQueries({ queryKey: ["ledger"] });
         queryClient.invalidateQueries({ queryKey: ["nextBillNumber"] });
-        queryClient.invalidateQueries({ queryKey: ["dailySummary"] });
-        queryClient.invalidateQueries({ queryKey: ["topProducts"] });
 
         onBillSaved(savedBill);
       }
