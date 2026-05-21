@@ -4,7 +4,7 @@ import { User, Phone } from "lucide-react";
 import { useCustomers } from "@/lib/hooks";
 import { formatINR, cn } from "@/lib/utils";
 import { useUIStore } from "@/stores/ui-store";
-import type { Customer } from "@/types/database";
+
 
 interface CustomerListProps {
   searchQuery: string;

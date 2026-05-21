@@ -6,7 +6,7 @@ import {
   Smartphone,
   BookOpen,
   Printer,
-  MessageCircle,
+  Share2,
   CheckCircle2,
   Loader2,
 } from "lucide-react";
@@ -81,6 +81,51 @@ export function PaymentBar({ total, billNumber, onBillSaved }: PaymentBarProps) 
 
   const handlePrintBill = () => {
     window.print();
+  };
+
+  const handleSharePDF = async () => {
+    if (!billNumber) return;
+    const element = document.getElementById("receipt-print-area");
+    if (!element) {
+      setError("Please save the bill first to share as PDF.");
+      return;
+    }
+    setError(null);
+    try {
+      // @ts-ignore
+      const html2pdf = (await import("html2pdf.js")).default;
+      element.classList.remove("receipt-print-only");
+      element.style.display = "block";
+
+      const opt = {
+        margin: 1,
+        filename: `bill-${billNumber}.pdf`,
+        image: { type: "jpeg", quality: 0.98 },
+        html2canvas: { scale: 2 },
+        jsPDF: { unit: "mm", format: [58, 200], orientation: "portrait" },
+      };
+
+      const pdfBlob = await html2pdf().set(opt).from(element).output("blob");
+
+      if (navigator.share) {
+        const file = new File([pdfBlob], opt.filename, {
+          type: "application/pdf",
+        });
+        await navigator.share({
+          title: "Bill Receipt",
+          text: "Here is your bill receipt",
+          files: [file],
+        });
+      } else {
+        html2pdf().set(opt).from(element).save();
+      }
+    } catch (err) {
+      console.error("Error sharing PDF:", err);
+      setError("Failed to share PDF.");
+    } finally {
+      element.style.display = "";
+      element.classList.add("receipt-print-only");
+    }
   };
 
   return (
@@ -186,9 +231,12 @@ export function PaymentBar({ total, billNumber, onBillSaved }: PaymentBarProps) 
           <Printer className="w-3.5 h-3.5" />
           Print Bill
         </button>
-        <button className="flex-1 py-2 border border-green rounded-xl text-xs font-medium text-green hover:bg-green-light transition-colors flex items-center justify-center gap-1.5">
-          <MessageCircle className="w-3.5 h-3.5" />
-          WhatsApp Bill
+        <button 
+          onClick={handleSharePDF}
+          className="flex-1 py-2 border border-primary rounded-xl text-xs font-medium text-primary hover:bg-primary-light transition-colors flex items-center justify-center gap-1.5"
+        >
+          <Share2 className="w-3.5 h-3.5" />
+          Share as PDF
         </button>
       </div>
     </div>

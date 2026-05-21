@@ -23,6 +23,7 @@ interface CartState {
     quantity: number;
     unit: Unit;
     unit_price: number;
+    hsn_code?: string;
   }) => void;
   removeItem: (id: string) => void;
   updateQuantity: (id: string, quantity: number) => void;
@@ -67,6 +68,7 @@ export const useCartStore = create<CartState>((set, get) => ({
           unit: product.unit,
           unit_price: product.unit_price,
           subtotal: product.quantity * product.unit_price,
+          hsn_code: product.hsn_code,
         },
       ],
     }));
@@ -175,6 +177,7 @@ export const useCartStore = create<CartState>((set, get) => ({
         unit: item.unit,
         unit_price: item.unit_price,
         subtotal: item.subtotal,
+        hsn_code: item.hsn_code,
       }));
 
       const { error: itemsError } = await supabase
@@ -183,20 +186,22 @@ export const useCartStore = create<CartState>((set, get) => ({
 
       if (itemsError) throw itemsError;
 
-      // 3. If there's a balance due (partial payment or full khata), update customer outstanding balance
-      if (balanceDue > 0 && state.customer_id) {
-        const { data: custData } = await supabase
-          .from("customers")
-          .select("outstanding_balance")
-          .eq("id", state.customer_id)
-          .single();
-
-        if (custData) {
-          const newBalance = Number(custData.outstanding_balance) + balanceDue;
-          await supabase
+      // 3. Update customer outstanding balance and record upfront payment
+      if (state.customer_id) {
+        if (balanceDue > 0) {
+          const { data: custData } = await supabase
             .from("customers")
-            .update({ outstanding_balance: newBalance })
-            .eq("id", state.customer_id);
+            .select("outstanding_balance")
+            .eq("id", state.customer_id)
+            .single();
+
+          if (custData) {
+            const newBalance = Number(custData.outstanding_balance) + balanceDue;
+            await supabase
+              .from("customers")
+              .update({ outstanding_balance: newBalance })
+              .eq("id", state.customer_id);
+          }
         }
 
         // 4. Insert payment record for the upfront amount paid (if any)
@@ -226,6 +231,7 @@ export const useCartStore = create<CartState>((set, get) => ({
           unit: item.unit,
           unit_price: item.unit_price,
           subtotal: item.subtotal,
+          hsn_code: item.hsn_code,
         })),
         subtotal,
         discount_type: state.discount_type,
@@ -255,7 +261,12 @@ export const useCartStore = create<CartState>((set, get) => ({
 
       return savedBill;
     } catch (error) {
-      console.error("Failed to save bill:", error);
+      const e = error as { message?: string; code?: string; details?: string; hint?: string };
+      console.error("Failed to save bill:", e?.message ?? error, {
+        code: e?.code,
+        details: e?.details,
+        hint: e?.hint,
+      });
       set({ saving: false });
       throw error;
     }

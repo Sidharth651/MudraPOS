@@ -39,6 +39,7 @@ export function IntegrationsCard() {
 
   useEffect(() => {
     if (dbSettings) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setPrinterEnabled(dbSettings.printer_enabled);
       setWhatsappEnabled(dbSettings.whatsapp_enabled);
       setWhatsappNumber(dbSettings.whatsapp_number);

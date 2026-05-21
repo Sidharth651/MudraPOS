@@ -103,14 +103,6 @@ export function Sidebar() {
             );
           })}
         </nav>
-
-        {/* Footer */}
-        <div className="px-5 py-4 border-t border-border">
-          <div className="text-xs text-text-muted">
-            <p className="font-medium text-text-primary">Cloth Market</p>
-            <p>Chandni Chowk, Delhi</p>
-          </div>
-        </div>
       </aside>
 
       {/* Bottom navigation for mobile */}

@@ -11,7 +11,7 @@ interface ProductTableProps {
 
 export function ProductTable({ searchQuery }: ProductTableProps) {
   const { openDrawer } = useUIStore();
-  const { data: queryProducts, isLoading } = useProducts();
+  const { data: queryProducts } = useProducts();
 
   let products = queryProducts ? [...queryProducts] : [];
 

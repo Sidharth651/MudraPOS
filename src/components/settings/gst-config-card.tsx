@@ -13,6 +13,7 @@ export function GSTConfigCard() {
 
   useEffect(() => {
     if (dbSettings?.gst_config) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setConfig(dbSettings.gst_config);
     }
   }, [dbSettings]);

@@ -10,6 +10,7 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
 
   // Avoid hydration errors by only rendering after mount
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setMounted(true);
   }, []);
 

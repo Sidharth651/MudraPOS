@@ -50,6 +50,7 @@ export interface BillItem {
   unit: Unit;
   unit_price: number;
   subtotal: number;
+  hsn_code?: string;
 }
 
 export interface Bill {
@@ -122,6 +123,7 @@ export interface CartItem {
   unit: Unit;
   unit_price: number;
   subtotal: number;
+  hsn_code?: string;
 }
 
 // ── Reports ─────────────────────────────────────────────────

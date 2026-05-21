@@ -2,6 +2,7 @@
 
 import { forwardRef } from "react";
 import { formatINR, formatDateTime } from "@/lib/utils";
+import { useReceiptSettingsStore } from "@/stores/receipt-settings-store";
 
 // ============================================================
 // Types
@@ -18,6 +19,7 @@ interface BillReceiptProps {
       unit: string;
       unit_price: number;
       subtotal: number;
+      hsn_code?: string;
     }>;
     subtotal: number;
     discount_type: "percentage" | "flat";
@@ -36,19 +38,6 @@ interface BillReceiptProps {
 // Constants
 // ============================================================
 
-const LINE_DOUBLE = "================================";
-const LINE_SINGLE = "--------------------------------";
-
-const receiptStyle: React.CSSProperties = {
-  width: "220px",
-  fontFamily: "'Courier New', Courier, monospace",
-  fontSize: "12px",
-  lineHeight: "1.4",
-  color: "#000",
-  background: "#fff",
-  padding: "4px",
-};
-
 const centerStyle: React.CSSProperties = {
   textAlign: "center",
 };
@@ -66,15 +55,13 @@ const boldStyle: React.CSSProperties = {
 // Helpers
 // ============================================================
 
-/** Format quantity + unit, e.g. "2.5m" or "3pcs" */
 function fmtQty(quantity: number, unit: string): string {
   const q = Number.isInteger(quantity) ? String(quantity) : quantity.toFixed(1);
-  return `${q}${unit}`;
+  return `${q}${unit === "metre" ? "m" : "pc"}`;
 }
 
-/** Compact INR without the ₹ symbol prefix (we add it ourselves) */
 function shortINR(amount: number): string {
-  return formatINR(amount);
+  return formatINR(amount).replace("₹", "").trim();
 }
 
 // ============================================================
@@ -83,6 +70,10 @@ function shortINR(amount: number): string {
 
 export const BillReceipt = forwardRef<HTMLDivElement, BillReceiptProps>(
   function BillReceipt({ bill, shopName }, ref) {
+    // Only fetch client-side state after hydration by providing defaults if not ready
+    // However, since this component only renders on print or in a preview after interaction, it should be safe.
+    const { headerText, footerText, showHsn, printWidth } = useReceiptSettingsStore();
+
     const halfGst = bill.gst_rate / 2;
     const taxableAmount = bill.subtotal - bill.discount_amount;
 
@@ -91,87 +82,83 @@ export const BillReceipt = forwardRef<HTMLDivElement, BillReceiptProps>(
         ? `Discount (${bill.discount_value}%)`
         : "Discount";
 
+    const receiptStyle: React.CSSProperties = {
+      width: printWidth || "300px",
+      fontFamily: "'Courier New', Courier, monospace",
+      fontSize: "12px",
+      lineHeight: "1.4",
+      color: "#000",
+      background: "#fff",
+      padding: "8px",
+      margin: "0 auto",
+    };
+
     return (
-      <div ref={ref} className="receipt-print-only" style={receiptStyle}>
-        {/* ── Header ─────────────────────────────── */}
+      <div id="receipt-print-area" ref={ref} className="receipt-print-only" style={receiptStyle}>
+        {/* ── Head: Estimated Invoice / Shop Name ── */}
         <div style={centerStyle}>
-          <div>{LINE_DOUBLE}</div>
-          {shopName && <div style={boldStyle}>{shopName}</div>}
-          <div>{LINE_DOUBLE}</div>
+          <div style={{ ...boldStyle, fontSize: "16px", marginBottom: "4px" }}>
+            {shopName || "Shop Name"}
+          </div>
+          <div style={{ ...boldStyle, fontSize: "14px" }}>{headerText}</div>
         </div>
 
-        {/* ── Bill Info ──────────────────────────── */}
+        <div style={{ borderBottom: "1px dashed #000", margin: "8px 0" }} />
+
+        {/* ── Section 1: Date, Invoice No. ── */}
         <div>
           <div style={rowStyle}>
-            <span>Bill #:</span>
+            <span>Invoice No:</span>
             <span>{bill.bill_number}</span>
           </div>
           <div style={rowStyle}>
             <span>Date:</span>
             <span>{formatDateTime(bill.created_at)}</span>
           </div>
-
+          {bill.customer_name && (
+            <div style={rowStyle}>
+              <span>Customer:</span>
+              <span>{bill.customer_name}</span>
+            </div>
+          )}
         </div>
 
-        <div>{LINE_SINGLE}</div>
+        <div style={{ borderBottom: "1px dashed #000", margin: "8px 0" }} />
 
-        {/* ── Items header ───────────────────────── */}
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            fontWeight: 700,
-          }}
-        >
+        {/* ── Section 2: Item Table ── */}
+        <div style={{ display: "flex", justifyContent: "space-between", fontWeight: 700, marginBottom: "4px" }}>
           <span style={{ flex: 1 }}>Item</span>
-          <span style={{ width: "48px", textAlign: "right" }}>Qty</span>
-          <span style={{ width: "48px", textAlign: "right" }}>Rate</span>
-          <span style={{ width: "56px", textAlign: "right" }}>Amt</span>
+          <span style={{ width: "45px", textAlign: "right" }}>Rate</span>
+          <span style={{ width: "45px", textAlign: "right" }}>Qty</span>
+          <span style={{ width: "60px", textAlign: "right" }}>Total</span>
         </div>
 
-        {/* ── Item rows ──────────────────────────── */}
         {bill.items.map((item, i) => (
-          <div
-            key={i}
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-            }}
-          >
-            <span
-              style={{
-                flex: 1,
-                overflow: "hidden",
-                textOverflow: "ellipsis",
-                whiteSpace: "nowrap",
-              }}
-            >
-              {item.product_name}
-            </span>
-            <span style={{ width: "48px", textAlign: "right" }}>
-              {fmtQty(item.quantity, item.unit)}
-            </span>
-            <span style={{ width: "48px", textAlign: "right" }}>
-              {shortINR(item.unit_price)}
-            </span>
-            <span style={{ width: "56px", textAlign: "right" }}>
-              {shortINR(item.subtotal)}
-            </span>
+          <div key={i} style={{ display: "flex", justifyContent: "space-between", marginBottom: "4px" }}>
+            <div style={{ flex: 1, paddingRight: "4px" }}>
+              <div style={{ wordBreak: "break-word" }}>{item.product_name}</div>
+              {showHsn && item.hsn_code && (
+                <div style={{ fontSize: "10px", color: "#444" }}>HSN: {item.hsn_code}</div>
+              )}
+            </div>
+            <span style={{ width: "45px", textAlign: "right" }}>{shortINR(item.unit_price)}</span>
+            <span style={{ width: "45px", textAlign: "right" }}>{fmtQty(item.quantity, item.unit)}</span>
+            <span style={{ width: "60px", textAlign: "right" }}>{shortINR(item.subtotal)}</span>
           </div>
         ))}
 
-        <div>{LINE_SINGLE}</div>
+        <div style={{ borderBottom: "1px dashed #000", margin: "8px 0" }} />
 
-        {/* ── Totals ─────────────────────────────── */}
-        <div>
+        {/* ── Section 3: Tax & Subtotals ── */}
+        <div style={{ marginLeft: "auto", width: "85%" }}>
           <div style={rowStyle}>
-            <span>Subtotal</span>
+            <span>Subtotal:</span>
             <span>{shortINR(bill.subtotal)}</span>
           </div>
 
           {bill.discount_amount > 0 && (
             <div style={rowStyle}>
-              <span>{discountLabel}</span>
+              <span>{discountLabel}:</span>
               <span>-{shortINR(bill.discount_amount)}</span>
             </div>
           )}
@@ -179,45 +166,41 @@ export const BillReceipt = forwardRef<HTMLDivElement, BillReceiptProps>(
           {bill.gst_rate > 0 && (
             <>
               <div style={rowStyle}>
-                <span>Taxable</span>
+                <span>Taxable:</span>
                 <span>{shortINR(taxableAmount)}</span>
               </div>
               <div style={rowStyle}>
-                <span>CGST ({halfGst}%)</span>
+                <span>CGST ({halfGst}%):</span>
                 <span>{shortINR(bill.cgst_amount)}</span>
               </div>
               <div style={rowStyle}>
-                <span>SGST ({halfGst}%)</span>
+                <span>SGST ({halfGst}%):</span>
                 <span>{shortINR(bill.sgst_amount)}</span>
               </div>
             </>
           )}
         </div>
 
-        <div style={centerStyle}>
-          <div>{LINE_DOUBLE}</div>
-          <div style={{ ...rowStyle, ...boldStyle, fontSize: "14px" }}>
-            <span>TOTAL</span>
-            <span>{shortINR(bill.total)}</span>
-          </div>
-          <div>{LINE_DOUBLE}</div>
+        <div style={{ borderBottom: "1px dashed #000", margin: "8px 0" }} />
+
+        {/* ── Section 4: Total in bold ── */}
+        <div style={{ ...rowStyle, ...boldStyle, fontSize: "16px" }}>
+          <span>TOTAL:</span>
+          <span>₹{shortINR(bill.total)}</span>
         </div>
 
-        {/* ── Payment & Footer ───────────────────── */}
-        <div>
-          <div style={rowStyle}>
-            <span>Payment:</span>
-            <span style={{ textTransform: "capitalize" }}>
-              {bill.payment_method}
-            </span>
-          </div>
+        <div style={{ borderBottom: "1px dashed #000", margin: "8px 0" }} />
+        
+        <div style={rowStyle}>
+          <span>Payment Mode:</span>
+          <span style={{ textTransform: "capitalize" }}>{bill.payment_method}</span>
         </div>
 
-        <div style={{ ...centerStyle, marginTop: "8px" }}>
-          <div>Thank you for shopping!</div>
-          <div>{LINE_DOUBLE}</div>
+        {/* ── Section 5: Thank you for shopping ── */}
+        <div style={{ ...centerStyle, marginTop: "16px", marginBottom: "8px" }}>
+          <div style={{ fontWeight: "bold" }}>{footerText}</div>
         </div>
       </div>
     );
-  },
+  }
 );

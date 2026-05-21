@@ -65,7 +65,8 @@ CREATE TABLE IF NOT EXISTS bill_items (
   quantity NUMERIC(10, 2) NOT NULL,
   unit TEXT NOT NULL DEFAULT 'metre',
   unit_price NUMERIC(10, 2) NOT NULL,
-  subtotal NUMERIC(10, 2) NOT NULL
+  subtotal NUMERIC(10, 2) NOT NULL,
+  hsn_code TEXT
 );
 
 -- ── Payments (Khata) ────────────────────────────────────────

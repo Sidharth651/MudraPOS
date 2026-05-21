@@ -170,7 +170,7 @@ export function useSalesBreakdown() {
 }
 
 export function useTopProducts() {
-  const supabase = useSupabase();
+
   return useQuery({
     queryKey: ["topProducts"],
     queryFn: async () => {
@@ -192,8 +192,7 @@ export function useLedgerEntries(customerId: string) {
       const { data: billsData, error: bErr } = await supabase
         .from("bills")
         .select("*")
-        .eq("customer_id", customerId)
-        .or("payment_method.eq.credit,status.eq.pending");
+        .eq("customer_id", customerId);
         
       if (bErr) throw bErr;
       

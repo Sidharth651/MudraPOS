@@ -1,6 +1,7 @@
 "use client";
 
 import { ShopDetailsCard } from "@/components/settings/shop-details-card";
+import { ReceiptSettingsCard } from "@/components/settings/receipt-settings-card";
 
 export default function SettingsPage() {
   return (
@@ -14,6 +15,7 @@ export default function SettingsPage() {
       {/* Cards */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <ShopDetailsCard />
+        <ReceiptSettingsCard />
       </div>
     </div>
   );

@@ -26,7 +26,6 @@ export function CartPanel({ billNumber, onBillSaved }: CartPanelProps) {
     getGSTRate,
     getCGST,
     getSGST,
-    getGSTAmount,
     getTotal,
   } = useCartStore();
 
@@ -36,7 +35,6 @@ export function CartPanel({ billNumber, onBillSaved }: CartPanelProps) {
   const gstRate = getGSTRate();
   const cgst = getCGST();
   const sgst = getSGST();
-  const gstAmount = getGSTAmount();
   const total = getTotal();
 
   return (

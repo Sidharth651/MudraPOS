@@ -10,6 +10,7 @@ export function ShopDetailsCard() {
   const [settings, setSettings] = useState({ shop_name: "" });
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (dbSettings) setSettings({ shop_name: dbSettings.shop_name });
   }, [dbSettings]);
 

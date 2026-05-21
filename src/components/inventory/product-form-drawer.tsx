@@ -22,6 +22,7 @@ export function ProductFormDrawer() {
 
   useEffect(() => {
     if (isEdit && product) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setName(product.name);
       setCategory(product.category);
       setPrice(String(product.price_per_unit));

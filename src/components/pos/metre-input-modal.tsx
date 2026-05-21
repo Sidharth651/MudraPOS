@@ -34,6 +34,7 @@ export function MetreInputModal({ product, onClose }: MetreInputModalProps) {
       quantity,
       unit: product.unit,
       unit_price: product.price_per_unit,
+      hsn_code: product.hsn_code,
     });
     onClose();
   };

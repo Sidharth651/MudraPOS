@@ -30,8 +30,7 @@ export function CustomerLedger() {
         const { data: bData } = await supabase
           .from("bills")
           .select("total, status")
-          .eq("customer_id", selectedCustomerId)
-          .or("payment_method.eq.credit,status.eq.pending");
+          .eq("customer_id", selectedCustomerId);
         
         const { data: pData } = await supabase
           .from("payments")

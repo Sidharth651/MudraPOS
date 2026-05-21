@@ -1,23 +1,51 @@
 "use client";
 
 import { useState } from "react";
+import { Loader2 } from "lucide-react";
 import { Drawer } from "@/components/ui/drawer";
 import { useUIStore } from "@/stores/ui-store";
+import { createClient } from "@/lib/supabase/client";
+import { useQueryClient } from "@tanstack/react-query";
 
 export function CustomerFormDrawer() {
   const { drawerOpen, drawerContent, closeDrawer } = useUIStore();
   const isOpen = drawerOpen && drawerContent === "add-customer";
+  const queryClient = useQueryClient();
 
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [address, setAddress] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleSave = () => {
-    if (!name || !phone) return;
+  const handleSave = async () => {
+    if (!name.trim() || !phone.trim()) return;
+    setSaving(true);
+    setError(null);
+
+    const supabase = createClient();
+    const { error: dbError } = await supabase.from("customers").insert({
+      name: name.trim(),
+      phone: phone.trim(),
+      address: address.trim(),
+      outstanding_balance: 0,
+    });
+
+    setSaving(false);
+
+    if (dbError) {
+      setError("Failed to save customer. Please try again.");
+      return;
+    }
+
+    // Refresh the customers list everywhere
+    queryClient.invalidateQueries({ queryKey: ["customers"] });
+
     closeDrawer();
     setName("");
     setPhone("");
     setAddress("");
+    setError(null);
   };
 
   const inputClass =
@@ -64,12 +92,22 @@ export function CustomerFormDrawer() {
           />
         </div>
 
+        {error && (
+          <div className="text-xs text-red bg-red-light px-3 py-2 rounded-lg">
+            {error}
+          </div>
+        )}
+
         <button
           onClick={handleSave}
-          disabled={!name || !phone}
-          className="w-full mt-4 py-3 bg-primary text-white rounded-xl font-semibold text-sm hover:bg-primary-dark transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          disabled={!name.trim() || !phone.trim() || saving}
+          className="w-full mt-4 py-3 bg-primary text-white rounded-xl font-semibold text-sm hover:bg-primary-dark transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
         >
-          Save Customer
+          {saving ? (
+            <><Loader2 className="w-4 h-4 animate-spin" /> Saving...</>
+          ) : (
+            "Save Customer"
+          )}
         </button>
       </div>
     </Drawer>
