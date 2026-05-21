@@ -2,39 +2,122 @@
 
 @import "tailwindcss";
 
+:root {
+  --color-bg: #ffffff;
+  --color-fg: #1F2937;
+  --color-sfc: #F8FAFB;
+  --color-sfc-hv: #F1F5F5;
+  --color-bd: #E5E7EB;
+  --color-bd-dk: #D1D5DB;
+  --color-txt-pri: #1F2937;
+  --color-txt-mut: #6B7280;
+  --color-txt-lgt: #9CA3AF;
+  --color-sb: #F8FAFB;
+  --color-sb-hv: #E6F4F4;
+
+  --p: #0D6E6E;
+  --p-light: #E0F2F1;
+  --p-dark: #0A5555;
+  --p-50: #E6F4F4;
+  --p-100: #CCE9E9;
+  --p-200: #99D3D3;
+  --p-600: #0B5E5E;
+  --p-700: #094E4E;
+  --p-800: #073E3E;
+  
+  --a: #F59E0B;
+  --a-light: #FEF3C7;
+  --a-dark: #D97706;
+  
+  --g: #16A34A;
+  --g-light: #DCFCE7;
+  --g-dark: #15803D;
+  
+  --r: #DC2626;
+  --r-light: #FEE2E2;
+  --r-dark: #B91C1C;
+  
+  --pu: #7C3AED;
+  --bl: #2563EB;
+}
+
+.dark {
+  --color-bg: #030712;
+  --color-fg: #F9FAFB;
+  --color-sfc: #111827;
+  --color-sfc-hv: #1F2937;
+  --color-bd: #374151;
+  --color-bd-dk: #4B5563;
+  --color-txt-pri: #F9FAFB;
+  --color-txt-mut: #9CA3AF;
+  --color-txt-lgt: #6B7280;
+  --color-sb: #030712;
+  --color-sb-hv: #111827;
+
+  --p: #14A0A0; /* Brighter cyan for dark mode */
+  --p-light: #082121; /* Dark background replacement */
+  --p-dark: #32D9D9; /* Even brighter for text highlights */
+  --p-50: #061919; /* Very dark background */
+  --p-100: #0A2F2F;
+  --p-200: #0D4040;
+  --p-600: #0D6E6E;
+  --p-700: #0A5555;
+  --p-800: #073E3E;
+  
+  --a: #FBBF24;
+  --a-light: #422006; /* Dark amber background */
+  --a-dark: #FDE68A;
+  
+  --g: #4ADE80;
+  --g-light: #052E16; /* Dark green background */
+  --g-dark: #86EFAC;
+  
+  --r: #F87171;
+  --r-light: #450A0A; /* Dark red background */
+  --r-dark: #FCA5A5;
+  
+  --pu: #A78BFA;
+  --bl: #60A5FA;
+}
+
 @theme inline {
-  --color-background: #ffffff;
-  --color-foreground: #1F2937;
-  --color-primary: #0D6E6E;
-  --color-primary-light: #E0F2F1;
-  --color-primary-dark: #0A5555;
-  --color-primary-50: #E6F4F4;
-  --color-primary-100: #CCE9E9;
-  --color-primary-200: #99D3D3;
-  --color-primary-600: #0B5E5E;
-  --color-primary-700: #094E4E;
-  --color-primary-800: #073E3E;
-  --color-amber: #F59E0B;
-  --color-amber-light: #FEF3C7;
-  --color-amber-dark: #D97706;
-  --color-green: #16A34A;
-  --color-green-light: #DCFCE7;
-  --color-green-dark: #15803D;
-  --color-red: #DC2626;
-  --color-red-light: #FEE2E2;
-  --color-red-dark: #B91C1C;
-  --color-purple: #7C3AED;
-  --color-blue: #2563EB;
-  --color-surface: #F8FAFB;
-  --color-surface-hover: #F1F5F5;
-  --color-border: #E5E7EB;
-  --color-border-dark: #D1D5DB;
-  --color-text-primary: #1F2937;
-  --color-text-muted: #6B7280;
-  --color-text-light: #9CA3AF;
-  --color-sidebar: #F8FAFB;
-  --color-sidebar-hover: #E6F4F4;
-  --color-sidebar-active: #0D6E6E;
+  --color-background: var(--color-bg);
+  --color-foreground: var(--color-fg);
+  --color-surface: var(--color-sfc);
+  --color-surface-hover: var(--color-sfc-hv);
+  --color-border: var(--color-bd);
+  --color-border-dark: var(--color-bd-dk);
+  --color-text-primary: var(--color-txt-pri);
+  --color-text-muted: var(--color-txt-mut);
+  --color-text-light: var(--color-txt-lgt);
+  --color-sidebar: var(--color-sb);
+  --color-sidebar-hover: var(--color-sb-hv);
+
+  --color-primary: var(--p);
+  --color-primary-light: var(--p-light);
+  --color-primary-dark: var(--p-dark);
+  --color-primary-50: var(--p-50);
+  --color-primary-100: var(--p-100);
+  --color-primary-200: var(--p-200);
+  --color-primary-600: var(--p-600);
+  --color-primary-700: var(--p-700);
+  --color-primary-800: var(--p-800);
+  
+  --color-amber: var(--a);
+  --color-amber-light: var(--a-light);
+  --color-amber-dark: var(--a-dark);
+  
+  --color-green: var(--g);
+  --color-green-light: var(--g-light);
+  --color-green-dark: var(--g-dark);
+  
+  --color-red: var(--r);
+  --color-red-light: var(--r-light);
+  --color-red-dark: var(--r-dark);
+  
+  --color-purple: var(--pu);
+  --color-blue: var(--bl);
+  
   --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
 }
 

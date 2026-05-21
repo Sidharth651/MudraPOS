@@ -3,8 +3,10 @@
 import { useState, useEffect } from "react";
 import { Drawer } from "@/components/ui/drawer";
 import { useUIStore } from "@/stores/ui-store";
-import { useCategories } from "@/lib/hooks";
+import { useCategories, useSupabase } from "@/lib/hooks";
 import type { Product } from "@/types/database";
+import { useQueryClient } from "@tanstack/react-query";
+import { Loader2 } from "lucide-react";
 
 export function ProductFormDrawer() {
   const { drawerOpen, drawerContent, drawerData, closeDrawer } = useUIStore();
@@ -13,12 +15,15 @@ export function ProductFormDrawer() {
   const product = drawerData?.product as unknown as Product | undefined;
 
   const { data: categories } = useCategories();
+  const supabase = useSupabase();
+  const queryClient = useQueryClient();
 
   const [name, setName] = useState("");
   const [category, setCategory] = useState("fabric");
   const [price, setPrice] = useState("");
   const [unit, setUnit] = useState("metre");
   const [hsn, setHsn] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     if (isEdit && product) {
@@ -27,20 +32,44 @@ export function ProductFormDrawer() {
       setCategory(product.category);
       setPrice(String(product.price_per_unit));
       setUnit(product.unit);
-      setHsn(product.hsn_code);
+      setHsn(product.hsn_code || "");
     } else if (!isEdit) {
       setName("");
-      setCategory("fabric");
+      setCategory(categories?.[0]?.name || "fabric");
       setPrice("");
       setUnit("metre");
       setHsn("");
     }
-  }, [isEdit, product]);
+  }, [isEdit, product, categories]);
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!name || !price) return;
-    // Mock save
-    closeDrawer();
+    setIsSubmitting(true);
+    try {
+      const payload = {
+        name: name.trim(),
+        category,
+        price_per_unit: Number(price),
+        unit,
+        hsn_code: hsn.trim() || null,
+      };
+
+      if (isEdit && product?.id) {
+        const { error } = await supabase.from("products").update(payload).eq("id", product.id);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase.from("products").insert([payload]);
+        if (error) throw error;
+      }
+
+      queryClient.invalidateQueries({ queryKey: ["products"] });
+      closeDrawer();
+    } catch (error) {
+      console.error("Error saving product:", error);
+      alert("Failed to save product");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const inputClass =
@@ -128,9 +157,10 @@ export function ProductFormDrawer() {
 
         <button
           onClick={handleSave}
-          disabled={!name || !price}
-          className="w-full mt-4 py-3 bg-primary text-white rounded-xl font-semibold text-sm hover:bg-primary-dark transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          disabled={!name || !price || isSubmitting}
+          className="w-full mt-4 py-3 bg-primary text-white rounded-xl font-semibold text-sm hover:bg-primary-dark transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
         >
+          {isSubmitting && <Loader2 className="w-4 h-4 animate-spin" />}
           {isEdit ? "Save Changes" : "Add Fabric"}
         </button>
       </div>

@@ -48,7 +48,7 @@ export function IntegrationsCard() {
   }, [dbSettings]);
 
   return (
-    <div className="bg-white border border-border rounded-xl shadow-sm">
+    <div className="bg-surface border border-border rounded-xl shadow-sm">
       {/* Header */}
       <div className="flex items-center gap-2.5 px-5 py-4 border-b border-border">
         <div className="w-8 h-8 rounded-lg bg-primary-50 flex items-center justify-center">

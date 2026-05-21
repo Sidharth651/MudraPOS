@@ -16,7 +16,7 @@ export default function InventoryPage() {
   const totalProducts = products?.length || 0;
 
   return (
-    <div className="p-4 lg:p-6 max-w-7xl mx-auto">
+    <div className="p-4 lg:p-6">
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
@@ -30,7 +30,7 @@ export default function InventoryPage() {
         <div className="flex items-center gap-3">
           <button
             onClick={() => openDrawer("manage-categories")}
-            className="flex items-center gap-2 px-4 py-2.5 bg-white border border-border text-text-primary rounded-xl text-sm font-semibold hover:bg-surface transition-colors shadow-sm"
+            className="flex items-center gap-2 px-4 py-2.5 bg-surface border border-border text-text-primary rounded-xl text-sm font-semibold hover:bg-surface-hover transition-colors shadow-sm"
           >
             Manage Categories
           </button>
@@ -46,7 +46,7 @@ export default function InventoryPage() {
 
       {/* Stats */}
       <div className="mb-6">
-        <div className="bg-white border border-border rounded-xl p-4 flex items-center gap-3 inline-flex">
+        <div className="bg-surface border border-border rounded-xl p-4 flex items-center gap-3 inline-flex">
           <div className="w-10 h-10 rounded-xl bg-primary-50 flex items-center justify-center">
             <Package className="w-5 h-5 text-primary" />
           </div>
@@ -65,7 +65,7 @@ export default function InventoryPage() {
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           placeholder="Search products by name..."
-          className="w-full pl-10 pr-4 py-2.5 border border-border rounded-xl bg-white text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors"
+          className="w-full pl-10 pr-4 py-2.5 border border-border rounded-xl bg-surface text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors"
         />
       </div>
 

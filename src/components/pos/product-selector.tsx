@@ -28,7 +28,7 @@ export function ProductSelector() {
           placeholder="Search products..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="w-full pl-10 pr-4 py-2.5 border border-border rounded-xl bg-white text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors"
+          className="w-full pl-10 pr-4 py-2.5 border border-border rounded-xl bg-surface text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors"
         />
       </div>
 
@@ -39,11 +39,14 @@ export function ProductSelector() {
             <button
               key={product.id}
               onClick={() => setSelectedProduct(product)}
-              className="bg-white border border-border rounded-xl p-3.5 text-left hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 group"
+              className="bg-surface border border-border rounded-xl p-3.5 text-left hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 group"
             >
               <h3 className="text-sm font-semibold text-text-primary leading-tight group-hover:text-primary transition-colors">
                 {product.name}
               </h3>
+              <p className="text-xs text-text-muted mt-0.5">
+                {product.category}
+              </p>
               <div className="mt-2">
                 <span className="text-sm font-bold text-primary">
                   {formatINR(product.price_per_unit)}

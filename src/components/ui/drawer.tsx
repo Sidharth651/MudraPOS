@@ -54,14 +54,14 @@ export function Drawer({
       {/* Drawer Panel */}
       <div
         ref={drawerRef}
-        className={`relative ${width} w-full bg-white shadow-2xl drawer-enter flex flex-col h-full`}
+        className={`relative ${width} w-full bg-surface shadow-2xl drawer-enter flex flex-col h-full`}
       >
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-border">
           <h2 className="text-lg font-semibold text-text-primary">{title}</h2>
           <button
             onClick={onClose}
-            className="p-2 rounded-lg hover:bg-surface transition-colors text-text-muted hover:text-text-primary"
+            className="p-2 rounded-lg hover:bg-surface-hover transition-colors text-text-muted hover:text-text-primary"
             aria-label="Close drawer"
           >
             <X className="w-5 h-5" />

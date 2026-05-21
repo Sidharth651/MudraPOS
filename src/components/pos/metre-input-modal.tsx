@@ -45,11 +45,11 @@ export function MetreInputModal({ product, onClose }: MetreInputModalProps) {
       <div className="absolute inset-0 bg-black/40 overlay-enter" onClick={onClose} />
 
       {/* Modal */}
-      <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6 modal-enter">
+      <div className="relative bg-surface rounded-2xl shadow-2xl w-full max-w-sm p-6 modal-enter">
         {/* Close */}
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 p-1.5 rounded-lg hover:bg-surface transition-colors text-text-muted"
+          className="absolute top-4 right-4 p-1.5 rounded-lg hover:bg-surface-hover transition-colors text-text-muted"
         >
           <X className="w-4 h-4" />
         </button>
@@ -68,9 +68,9 @@ export function MetreInputModal({ product, onClose }: MetreInputModalProps) {
           <div className="flex items-center gap-3">
             <button
               onClick={() => setQuantity(Number(Math.max(step, quantity - step).toFixed(2)))}
-              className="w-10 h-10 rounded-xl border border-border flex items-center justify-center hover:bg-surface transition-colors"
+              className="w-12 h-12 shrink-0 rounded-xl border border-border flex items-center justify-center hover:bg-surface-hover transition-colors"
             >
-              <Minus className="w-4 h-4" />
+              <Minus className="w-5 h-5" />
             </button>
             <input
               type="number"
@@ -78,13 +78,13 @@ export function MetreInputModal({ product, onClose }: MetreInputModalProps) {
               onChange={(e) => setQuantity(Math.max(0, parseFloat(e.target.value) || 0))}
               step={step}
               min={step}
-              className="flex-1 text-center text-xl font-bold border border-border rounded-xl px-4 py-2.5 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+              className="flex-1 min-w-0 h-12 text-center text-xl font-bold border border-border rounded-xl px-4 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
             />
             <button
               onClick={() => setQuantity(Number((quantity + step).toFixed(2)))}
-              className="w-10 h-10 rounded-xl border border-border flex items-center justify-center hover:bg-surface transition-colors"
+              className="w-12 h-12 shrink-0 rounded-xl border border-border flex items-center justify-center hover:bg-surface-hover transition-colors"
             >
-              <Plus className="w-4 h-4" />
+              <Plus className="w-5 h-5" />
             </button>
           </div>
         </div>
@@ -104,7 +104,7 @@ export function MetreInputModal({ product, onClose }: MetreInputModalProps) {
         <div className="mt-5 flex gap-3">
           <button
             onClick={onClose}
-            className="flex-1 px-4 py-2.5 border border-border rounded-xl text-sm font-medium text-text-muted hover:bg-surface transition-colors"
+            className="flex-1 px-4 py-2.5 border border-border rounded-xl text-sm font-medium text-text-muted hover:bg-surface-hover transition-colors"
           >
             Cancel
           </button>

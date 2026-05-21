@@ -1,9 +1,10 @@
 "use client";
 
-import { useProducts } from "@/lib/hooks";
+import { useProducts, useSupabase } from "@/lib/hooks";
 import { formatINR } from "@/lib/utils";
 import { useUIStore } from "@/stores/ui-store";
 import { Pencil, Trash2 } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface ProductTableProps {
   searchQuery: string;
@@ -12,6 +13,8 @@ interface ProductTableProps {
 export function ProductTable({ searchQuery }: ProductTableProps) {
   const { openDrawer } = useUIStore();
   const { data: queryProducts } = useProducts();
+  const supabase = useSupabase();
+  const queryClient = useQueryClient();
 
   let products = queryProducts ? [...queryProducts] : [];
 
@@ -22,6 +25,18 @@ export function ProductTable({ searchQuery }: ProductTableProps) {
       (p) => p.name.toLowerCase().includes(q)
     );
   }
+
+  const handleDelete = async (id: string, name: string) => {
+    if (!window.confirm(`Delete "${name}"?`)) return;
+    try {
+      const { error } = await supabase.from("products").delete().eq("id", id);
+      if (error) throw error;
+      queryClient.invalidateQueries({ queryKey: ["products"] });
+    } catch (error) {
+      console.error("Error deleting product:", error);
+      alert("Failed to delete product");
+    }
+  };
 
   return (
     <div>
@@ -66,11 +81,7 @@ export function ProductTable({ searchQuery }: ProductTableProps) {
                       <Pencil className="w-3.5 h-3.5" />
                     </button>
                     <button
-                      onClick={() => {
-                        if (window.confirm(`Delete "${product.name}"?`)) {
-                          // Mock delete
-                        }
-                      }}
+                      onClick={() => handleDelete(product.id, product.name)}
                       className="p-1.5 rounded-lg hover:bg-red-light text-text-muted hover:text-red transition-colors"
                       title="Delete"
                     >

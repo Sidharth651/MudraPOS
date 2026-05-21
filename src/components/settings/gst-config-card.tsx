@@ -19,7 +19,7 @@ export function GSTConfigCard() {
   }, [dbSettings]);
 
   return (
-    <div className="bg-white border border-border rounded-xl shadow-sm">
+    <div className="bg-surface border border-border rounded-xl shadow-sm">
       {/* Header */}
       <div className="flex items-center justify-between px-5 py-4 border-b border-border">
         <div className="flex items-center gap-2.5">
@@ -40,7 +40,7 @@ export function GSTConfigCard() {
           <div className="flex gap-2">
             <button
               onClick={() => setEditing(false)}
-              className="px-3 py-1.5 text-xs font-medium text-text-muted hover:bg-surface rounded-lg transition-colors"
+              className="px-3 py-1.5 text-xs font-medium text-text-muted hover:bg-surface-hover rounded-lg transition-colors"
             >
               Cancel
             </button>

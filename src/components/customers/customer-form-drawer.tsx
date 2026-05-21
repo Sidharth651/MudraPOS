@@ -1,16 +1,19 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Loader2 } from "lucide-react";
 import { Drawer } from "@/components/ui/drawer";
 import { useUIStore } from "@/stores/ui-store";
 import { createClient } from "@/lib/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
+import { useCartStore } from "@/stores/cart-store";
 
 export function CustomerFormDrawer() {
-  const { drawerOpen, drawerContent, closeDrawer } = useUIStore();
-  const isOpen = drawerOpen && drawerContent === "add-customer";
+  const { drawerOpen, drawerContent, drawerData, closeDrawer } = useUIStore();
+  const isEdit = drawerContent === "edit-customer";
+  const isOpen = drawerOpen && (drawerContent === "add-customer" || isEdit);
   const queryClient = useQueryClient();
+  const { setCustomer } = useCartStore();
 
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
@@ -18,24 +21,64 @@ export function CustomerFormDrawer() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  useEffect(() => {
+    if (isOpen && isEdit && drawerData) {
+      setName((drawerData.name as string) || "");
+      setPhone((drawerData.phone as string) || "");
+      setAddress((drawerData.address as string) || "");
+    } else if (!isOpen) {
+      setName("");
+      setPhone("");
+      setAddress("");
+      setError(null);
+    }
+  }, [isOpen, isEdit, drawerData]);
+
   const handleSave = async () => {
     if (!name.trim() || !phone.trim()) return;
     setSaving(true);
     setError(null);
 
     const supabase = createClient();
-    const { error: dbError } = await supabase.from("customers").insert({
-      name: name.trim(),
-      phone: phone.trim(),
-      address: address.trim(),
-      outstanding_balance: 0,
-    });
+    let dbError, newCustomer;
+
+    if (isEdit && drawerData?.id) {
+      const { data, error } = await supabase
+        .from("customers")
+        .update({
+          name: name.trim(),
+          phone: phone.trim(),
+          address: address.trim(),
+        })
+        .eq("id", drawerData.id)
+        .select()
+        .single();
+      dbError = error;
+      newCustomer = data;
+    } else {
+      const { data, error } = await supabase
+        .from("customers")
+        .insert({
+          name: name.trim(),
+          phone: phone.trim(),
+          address: address.trim(),
+          outstanding_balance: 0,
+        })
+        .select()
+        .single();
+      dbError = error;
+      newCustomer = data;
+    }
 
     setSaving(false);
 
     if (dbError) {
       setError("Failed to save customer. Please try again.");
       return;
+    }
+
+    if (newCustomer) {
+      setCustomer(newCustomer.id, newCustomer.name);
     }
 
     // Refresh the customers list everywhere
@@ -53,7 +96,7 @@ export function CustomerFormDrawer() {
   const labelClass = "text-sm font-medium text-text-primary block mb-1.5";
 
   return (
-    <Drawer open={isOpen} onClose={closeDrawer} title="New Customer">
+    <Drawer open={isOpen} onClose={closeDrawer} title={isEdit ? "Edit Customer" : "New Customer"}>
       <div className="space-y-4">
         <div>
           <label className={labelClass}>

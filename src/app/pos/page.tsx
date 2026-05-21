@@ -29,7 +29,7 @@ export default function POSPage() {
     <>
       <div className="flex flex-col lg:flex-row h-full no-print">
         {/* Left — Product Selector */}
-        <div className="flex-1 lg:w-[60%] p-4 lg:p-6 overflow-y-auto">
+        <div className="flex-1 lg:w-[60%] p-4 lg:p-6 overflow-y-auto min-h-[45vh] lg:min-h-0">
           {/* Header */}
           <div className="flex items-center justify-between mb-4">
             <div>
@@ -49,7 +49,7 @@ export default function POSPage() {
         </div>
 
         {/* Right — Cart */}
-        <div className="lg:w-[40%] lg:min-w-[360px] border-t lg:border-t-0">
+        <div className="lg:w-[40%] lg:min-w-[360px] border-t lg:border-t-0 flex flex-col min-h-0 lg:h-auto max-h-[55vh] lg:max-h-none">
           <CartPanel
             billNumber={displayBillNumber}
             onBillSaved={handleBillSaved}

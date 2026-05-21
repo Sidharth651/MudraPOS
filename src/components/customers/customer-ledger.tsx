@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Plus, ArrowLeft, Phone, MapPin, Trash2 } from "lucide-react";
+import { Plus, ArrowLeft, Phone, MapPin, Trash2, Edit } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { createClient } from "@/lib/supabase/client";
 import { useCustomers, useLedgerEntries } from "@/lib/hooks";
@@ -87,10 +87,19 @@ export function CustomerLedger() {
       </button>
 
       {/* Customer Header */}
-      <div className="bg-white border border-border rounded-xl p-4 mb-4">
+      <div className="bg-surface border border-border rounded-xl p-4 mb-4">
         <div className="flex items-start justify-between">
           <div>
-            <h2 className="text-lg font-bold text-text-primary">{customer.name}</h2>
+            <div className="flex items-center gap-2">
+              <h2 className="text-lg font-bold text-text-primary">{customer.name}</h2>
+              <button
+                onClick={() => openDrawer("edit-customer", customer as unknown as Record<string, unknown>)}
+                className="p-1 rounded-md text-text-muted hover:text-primary hover:bg-surface-hover transition-colors"
+                title="Edit Customer"
+              >
+                <Edit className="w-4 h-4" />
+              </button>
+            </div>
             <div className="flex items-center gap-1 text-xs text-text-muted mt-1">
               <Phone className="w-3 h-3" />
               {customer.phone}

@@ -95,7 +95,7 @@ export function PaymentBar({ total, billNumber, onBillSaved }: PaymentBarProps) 
       element.classList.remove("receipt-print-only");
       element.style.display = "block";
 
-      const opt = {
+      const opt: any = {
         margin: 1,
         filename: `bill-${billNumber}.pdf`,
         image: { type: "jpeg", quality: 0.98 },
@@ -127,7 +127,7 @@ export function PaymentBar({ total, billNumber, onBillSaved }: PaymentBarProps) 
   };
 
   return (
-    <div className="border-t border-border px-4 py-3 space-y-3 bg-white">
+    <div className="border-t border-border px-4 py-3 space-y-3 bg-surface">
       {/* Error Message */}
       {error && (
         <div className="text-xs text-red bg-red-light px-3 py-2 rounded-lg">
@@ -224,7 +224,7 @@ export function PaymentBar({ total, billNumber, onBillSaved }: PaymentBarProps) 
       <div className="flex gap-2">
         <button
           onClick={handlePrintBill}
-          className="flex-1 py-2 border border-border rounded-xl text-xs font-medium text-text-muted hover:bg-surface transition-colors flex items-center justify-center gap-1.5"
+          className="flex-1 py-2 border border-border rounded-xl text-xs font-medium text-text-muted hover:bg-surface-hover transition-colors flex items-center justify-center gap-1.5"
         >
           <Printer className="w-3.5 h-3.5" />
           Print Bill

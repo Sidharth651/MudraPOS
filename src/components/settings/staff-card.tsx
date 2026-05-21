@@ -23,7 +23,7 @@ export function StaffCard() {
   const staff = staffData || [];
 
   return (
-    <div className="bg-white border border-border rounded-xl shadow-sm">
+    <div className="bg-surface border border-border rounded-xl shadow-sm">
       {/* Header */}
       <div className="flex items-center justify-between px-5 py-4 border-b border-border">
         <div className="flex items-center gap-2.5">
@@ -44,7 +44,7 @@ export function StaffCard() {
       {/* Staff List */}
       <div className="divide-y divide-border">
         {staff.map((staff) => (
-          <div key={staff.id} className="px-5 py-3.5 flex items-center gap-3 hover:bg-surface/50 transition-colors">
+          <div key={staff.id} className="px-5 py-3.5 flex items-center gap-3 hover:bg-surface-hover/50 transition-colors">
             {/* Avatar */}
             <div className="w-9 h-9 rounded-full bg-primary-50 flex items-center justify-center text-sm font-semibold text-primary flex-shrink-0">
               {staff.name.charAt(0)}

@@ -31,7 +31,7 @@ export function Sidebar() {
     <>
       {/* Mobile hamburger button */}
       <button
-        className="fixed top-4 left-4 z-50 p-2 rounded-lg bg-white shadow-md border border-border lg:hidden no-print"
+        className="fixed top-4 left-4 z-50 p-2 rounded-lg bg-surface shadow-md border border-border lg:hidden no-print"
         onClick={toggleSidebar}
         aria-label="Toggle navigation"
       >
@@ -104,7 +104,7 @@ export function Sidebar() {
       </aside>
 
       {/* Bottom navigation for mobile */}
-      <nav className="fixed bottom-0 left-0 right-0 z-30 bg-white border-t border-border lg:hidden no-print">
+      <nav className="fixed bottom-0 left-0 right-0 z-30 bg-surface border-t border-border lg:hidden no-print">
         <div className="flex items-center justify-around h-16">
           {navItems.map((item) => {
             const isActive =

@@ -39,7 +39,7 @@ export function CustomerList({ searchQuery }: CustomerListProps) {
               "w-full text-left p-3.5 rounded-xl border transition-all duration-200",
               isSelected
                 ? "bg-primary-light border-primary border-l-4"
-                : "bg-white border-border hover:bg-surface hover:border-border-dark"
+                : "bg-surface border-border hover:bg-surface-hover hover:border-border-dark"
             )}
           >
             <div className="flex items-start gap-3">
@@ -62,7 +62,7 @@ export function CustomerList({ searchQuery }: CustomerListProps) {
                     </span>
                   ) : (
                     <span className="text-xs font-medium text-green whitespace-nowrap ml-2">
-                      Settled ✓
+                      No Dues ✓
                     </span>
                   )}
                 </div>

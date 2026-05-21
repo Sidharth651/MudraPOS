@@ -38,7 +38,7 @@ export function CartPanel({ billNumber, onBillSaved }: CartPanelProps) {
   const total = getTotal();
 
   return (
-    <div className="flex flex-col h-full bg-white lg:border-l border-border">
+    <div className="flex flex-col h-full bg-surface lg:border-l border-border">
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-border">
         <div className="flex items-center gap-2">
@@ -107,7 +107,7 @@ export function CartPanel({ billNumber, onBillSaved }: CartPanelProps) {
                           Math.max(item.unit === "metre" ? 0.5 : 1, item.quantity - (item.unit === "metre" ? 0.5 : 1))
                         )
                       }
-                      className="w-7 h-7 rounded-lg border border-border flex items-center justify-center hover:bg-white transition-colors"
+                      className="w-7 h-7 rounded-lg border border-border flex items-center justify-center hover:bg-surface-hover transition-colors"
                     >
                       <Minus className="w-3 h-3" />
                     </button>
@@ -118,7 +118,7 @@ export function CartPanel({ billNumber, onBillSaved }: CartPanelProps) {
                       onClick={() =>
                         updateQuantity(item.id, item.quantity + (item.unit === "metre" ? 0.5 : 1))
                       }
-                      className="w-7 h-7 rounded-lg border border-border flex items-center justify-center hover:bg-white transition-colors"
+                      className="w-7 h-7 rounded-lg border border-border flex items-center justify-center hover:bg-surface-hover transition-colors"
                     >
                       <Plus className="w-3 h-3" />
                     </button>
@@ -145,7 +145,7 @@ export function CartPanel({ billNumber, onBillSaved }: CartPanelProps) {
                 className={cn(
                   "px-2.5 py-1 rounded-md text-xs font-medium transition-all",
                   discount_type === "percentage"
-                    ? "bg-white text-primary shadow-sm"
+                    ? "bg-surface text-primary shadow-sm"
                     : "text-text-muted"
                 )}
               >
@@ -156,7 +156,7 @@ export function CartPanel({ billNumber, onBillSaved }: CartPanelProps) {
                 className={cn(
                   "px-2.5 py-1 rounded-md text-xs font-medium transition-all",
                   discount_type === "flat"
-                    ? "bg-white text-primary shadow-sm"
+                    ? "bg-surface text-primary shadow-sm"
                     : "text-text-muted"
                 )}
               >

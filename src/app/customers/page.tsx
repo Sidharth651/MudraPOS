@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Plus, Search, Users, IndianRupee, UserCheck } from "lucide-react";
+import { Plus, Search } from "lucide-react";
 import { useCustomers } from "@/lib/hooks";
 import { formatINR } from "@/lib/utils";
 import { useUIStore } from "@/stores/ui-store";
@@ -16,15 +16,6 @@ export default function CustomersPage() {
 
   const { data: customers } = useCustomers();
   const customerData = customers || [];
-
-  const totalCustomers = customerData.length;
-  const totalOutstanding = customerData.reduce(
-    (sum, c) => sum + Number(c.outstanding_balance),
-    0
-  );
-  const settledCount = customerData.filter(
-    (c) => Number(c.outstanding_balance) === 0
-  ).length;
 
   return (
     <div className="p-4 lg:p-6 h-full flex flex-col">
@@ -43,37 +34,6 @@ export default function CustomersPage() {
         </button>
       </div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-3 gap-3 mb-4">
-        <div className="bg-white border border-border rounded-xl p-3 flex items-center gap-2.5">
-          <div className="w-9 h-9 rounded-lg bg-primary-50 flex items-center justify-center">
-            <Users className="w-4 h-4 text-primary" />
-          </div>
-          <div>
-            <p className="text-[10px] text-text-muted">Customers</p>
-            <p className="text-base font-bold text-text-primary">{totalCustomers}</p>
-          </div>
-        </div>
-        <div className="bg-white border border-border rounded-xl p-3 flex items-center gap-2.5">
-          <div className="w-9 h-9 rounded-lg bg-red-light flex items-center justify-center">
-            <IndianRupee className="w-4 h-4 text-red" />
-          </div>
-          <div>
-            <p className="text-[10px] text-text-muted">Outstanding</p>
-            <p className="text-base font-bold text-red">{formatINR(totalOutstanding)}</p>
-          </div>
-        </div>
-        <div className="bg-white border border-border rounded-xl p-3 flex items-center gap-2.5">
-          <div className="w-9 h-9 rounded-lg bg-green-light flex items-center justify-center">
-            <UserCheck className="w-4 h-4 text-green" />
-          </div>
-          <div>
-            <p className="text-[10px] text-text-muted">Settled</p>
-            <p className="text-base font-bold text-green">{settledCount}</p>
-          </div>
-        </div>
-      </div>
-
       {/* Search */}
       <div className="relative mb-4">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted" />
@@ -82,7 +42,7 @@ export default function CustomersPage() {
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           placeholder="Search by name or phone..."
-          className="w-full pl-10 pr-4 py-2.5 border border-border rounded-xl bg-white text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors"
+          className="w-full pl-10 pr-4 py-2.5 border border-border rounded-xl bg-surface text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors"
         />
       </div>
 

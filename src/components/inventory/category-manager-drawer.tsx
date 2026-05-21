@@ -138,13 +138,13 @@ export function CategoryManagerDrawer() {
                             setEditingId(cat.id);
                             setEditName(cat.name);
                           }}
-                          className="p-1.5 rounded hover:bg-white text-text-muted hover:text-primary transition-colors"
+                          className="p-1.5 rounded hover:bg-surface-hover text-text-muted hover:text-primary transition-colors"
                         >
                           <Pencil className="w-3.5 h-3.5" />
                         </button>
                         <button
                           onClick={() => handleDeleteCategory(cat.id)}
-                          className="p-1.5 rounded hover:bg-white text-text-muted hover:text-red transition-colors"
+                          className="p-1.5 rounded hover:bg-surface-hover text-text-muted hover:text-red transition-colors"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
                         </button>

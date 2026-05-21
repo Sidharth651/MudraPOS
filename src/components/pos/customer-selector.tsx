@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { User, Search, X, Plus, ChevronDown } from "lucide-react";
+import { User, Search, X, Plus, ChevronDown, Edit } from "lucide-react";
 import { useCustomers } from "@/lib/hooks";
 import { useCartStore } from "@/stores/cart-store";
 import { useUIStore } from "@/stores/ui-store";
@@ -65,13 +65,25 @@ export function CustomerSelector() {
             {customerData.find((c) => c.id === customer_id)?.phone || ""}
           </p>
         </div>
-        <button
-          onClick={handleClear}
-          className="p-1 rounded-lg hover:bg-white/50 text-text-muted hover:text-red transition-colors"
-          title="Remove customer"
-        >
-          <X className="w-3.5 h-3.5" />
-        </button>
+        <div className="flex items-center gap-1">
+          <button
+            onClick={() => {
+              const customer = customerData.find((c) => c.id === customer_id);
+              if (customer) openDrawer("edit-customer", customer as unknown as Record<string, unknown>);
+            }}
+            className="p-1 rounded-lg hover:bg-surface-hover/50 text-text-muted hover:text-primary transition-colors"
+            title="Edit customer"
+          >
+            <Edit className="w-3.5 h-3.5" />
+          </button>
+          <button
+            onClick={handleClear}
+            className="p-1 rounded-lg hover:bg-surface-hover/50 text-text-muted hover:text-red transition-colors"
+            title="Remove customer"
+          >
+            <X className="w-3.5 h-3.5" />
+          </button>
+        </div>
       </div>
     );
   }
@@ -84,7 +96,7 @@ export function CustomerSelector() {
           setIsOpen(!isOpen);
           setTimeout(() => inputRef.current?.focus(), 100);
         }}
-        className="w-full flex items-center gap-2 px-3 py-2 border border-border rounded-xl text-sm text-text-muted hover:border-primary hover:bg-surface transition-colors"
+        className="w-full flex items-center gap-2 px-3 py-2 border border-border rounded-xl text-sm text-text-muted hover:border-primary hover:bg-surface-hover transition-colors"
       >
         <User className="w-4 h-4 flex-shrink-0" />
         <span className="flex-1 text-left">Select customer (optional)</span>
@@ -93,7 +105,7 @@ export function CustomerSelector() {
 
       {/* Dropdown */}
       {isOpen && (
-        <div className="absolute left-0 right-0 top-full mt-1 bg-white border border-border rounded-xl shadow-xl z-20 overflow-hidden">
+        <div className="absolute left-0 right-0 top-full mt-1 bg-surface border border-border rounded-xl shadow-xl z-20 overflow-hidden">
           {/* Search input */}
           <div className="p-2 border-b border-border">
             <div className="relative">
@@ -112,26 +124,41 @@ export function CustomerSelector() {
           {/* Customer list */}
           <div className="max-h-48 overflow-y-auto">
             {filteredCustomers.map((customer) => (
-              <button
+              <div
                 key={customer.id}
-                onClick={() => handleSelect(customer.id, customer.name)}
-                className="w-full flex items-center gap-2.5 px-3 py-2.5 text-left hover:bg-surface transition-colors"
+                className="w-full flex items-center gap-1 px-3 hover:bg-surface-hover transition-colors group"
               >
-                <div className="w-7 h-7 rounded-full bg-surface flex items-center justify-center flex-shrink-0">
-                  <User className="w-3.5 h-3.5 text-text-muted" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-text-primary truncate">
-                    {customer.name}
-                  </p>
-                  <p className="text-[10px] text-text-muted">{customer.phone}</p>
-                </div>
-                {customer.outstanding_balance > 0 && (
-                  <span className="text-[10px] font-medium text-red">
-                    {formatINR(customer.outstanding_balance)} due
-                  </span>
-                )}
-              </button>
+                <button
+                  onClick={() => handleSelect(customer.id, customer.name)}
+                  className="flex-1 flex items-center gap-2.5 py-2.5 text-left min-w-0"
+                >
+                  <div className="w-7 h-7 rounded-full bg-surface flex items-center justify-center flex-shrink-0">
+                    <User className="w-3.5 h-3.5 text-text-muted" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-text-primary truncate">
+                      {customer.name}
+                    </p>
+                    <p className="text-[10px] text-text-muted">{customer.phone}</p>
+                  </div>
+                  {customer.outstanding_balance > 0 && (
+                    <span className="text-[10px] font-medium text-red mr-1">
+                      {formatINR(customer.outstanding_balance)} due
+                    </span>
+                  )}
+                </button>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setIsOpen(false);
+                    openDrawer("edit-customer", customer as unknown as Record<string, unknown>);
+                  }}
+                  className="p-1.5 text-text-muted hover:text-primary rounded-md transition-colors flex-shrink-0"
+                  title="Edit Customer"
+                >
+                  <Edit className="w-3.5 h-3.5" />
+                </button>
+              </div>
             ))}
 
             {filteredCustomers.length === 0 && (

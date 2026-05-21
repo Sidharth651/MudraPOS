@@ -121,7 +121,7 @@ function FilterChip({
         "px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all whitespace-nowrap",
         active
           ? "bg-primary text-white border-primary shadow-sm"
-          : "bg-white text-text-muted border-border hover:border-primary/40 hover:text-text-primary"
+          : "bg-surface text-text-muted border-border hover:border-primary/40 hover:text-text-primary"
       )}
     >
       {label}
@@ -182,7 +182,7 @@ export default function InvoicesPage() {
   }
 
   return (
-    <div className="p-4 lg:p-6 max-w-7xl mx-auto pb-24 lg:pb-6">
+    <div className="p-4 lg:p-6 pb-24 lg:pb-6">
       {/* Header */}
       <div className="flex items-center gap-3 mb-6">
         <div className="w-10 h-10 rounded-xl bg-primary-light flex items-center justify-center">
@@ -212,7 +212,7 @@ export default function InvoicesPage() {
               placeholder="Search bill # or customer…"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full pl-9 pr-8 py-2 text-sm bg-white border border-border rounded-xl
+              className="w-full pl-9 pr-8 py-2 text-sm bg-surface border border-border rounded-xl
                          text-text-primary placeholder:text-text-muted
                          focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary
                          transition-colors"
@@ -235,7 +235,7 @@ export default function InvoicesPage() {
                 "flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium border transition-all",
                 dateRange !== "all"
                   ? "bg-primary text-white border-primary"
-                  : "bg-white text-text-muted border-border hover:border-primary/40 hover:text-text-primary"
+                  : "bg-surface text-text-muted border-border hover:border-primary/40 hover:text-text-primary"
               )}
             >
               <SlidersHorizontal className="w-4 h-4" />
@@ -244,7 +244,7 @@ export default function InvoicesPage() {
             </button>
 
             {showDateMenu && (
-              <div className="absolute right-0 top-full mt-1 z-20 bg-white border border-border rounded-xl shadow-lg p-2 min-w-[180px]">
+              <div className="absolute right-0 top-full mt-1 z-20 bg-surface border border-border rounded-xl shadow-lg p-2 min-w-[180px]">
                 {(["all", "today", "week", "month", "custom"] as DateRange[]).map((r) => (
                   <button
                     key={r}
@@ -256,7 +256,7 @@ export default function InvoicesPage() {
                       "w-full text-left px-3 py-2 text-sm rounded-lg transition-colors",
                       dateRange === r
                         ? "bg-primary/10 text-primary font-semibold"
-                        : "text-text-primary hover:bg-surface"
+                        : "text-text-primary hover:bg-surface-hover"
                     )}
                   >
                     {getDateRangeLabel(r)}
@@ -313,7 +313,7 @@ export default function InvoicesPage() {
         <div className="flex flex-wrap gap-2">
           {/* Status */}
           <div className="flex gap-1.5">
-            {(["all", "completed", "pending", "cancelled"] as const).map((s) => (
+            {(["all", "completed", "pending"] as const).map((s) => (
               <FilterChip
                 key={s}
                 label={s === "all" ? "All Status" : statusBadge[s].label}
@@ -349,7 +349,7 @@ export default function InvoicesPage() {
       ) : (
         <>
           {/* ── Desktop table ──────────────────────────────── */}
-          <div className="hidden md:block bg-white border border-border rounded-2xl overflow-hidden shadow-sm">
+          <div className="hidden md:block bg-surface border border-border rounded-2xl overflow-hidden shadow-sm">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-border bg-surface">
@@ -433,7 +433,7 @@ export default function InvoicesPage() {
               return (
                 <div
                   key={bill.id}
-                  className="bg-white border border-border rounded-2xl p-4 shadow-sm"
+                  className="bg-surface border border-border rounded-2xl p-4 shadow-sm"
                 >
                   {/* Top row */}
                   <div className="flex items-center justify-between mb-3">
