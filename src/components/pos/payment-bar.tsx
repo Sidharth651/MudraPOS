@@ -45,6 +45,7 @@ export function PaymentBar({ total, billNumber, onBillSaved }: PaymentBarProps) 
   } = useCartStore();
   const queryClient = useQueryClient();
   const [error, setError] = useState<string | null>(null);
+  const [waiveBalance, setWaiveBalance] = useState(false);
 
   const balanceDue = getBalanceDue();
   const showAmountReceived = payment_method === "cash" || payment_method === "upi";
@@ -53,14 +54,14 @@ export function PaymentBar({ total, billNumber, onBillSaved }: PaymentBarProps) 
     if (!billNumber) return;
     setError(null);
 
-    // If there's a balance due but no customer selected, warn
-    if (balanceDue > 0 && !customer_id) {
+    // If there's a balance due but no customer selected, warn (unless waiving)
+    if (balanceDue > 0 && !customer_id && !waiveBalance) {
       setError("Please select a customer to put balance on khata.");
       return;
     }
 
     try {
-      const savedBill = await saveBill(billNumber);
+      const savedBill = await saveBill(billNumber, waiveBalance);
       if (savedBill) {
         // Invalidate caches so dashboard/reports update
         queryClient.invalidateQueries({ queryKey: ["bills"] });
@@ -131,14 +132,27 @@ export function PaymentBar({ total, billNumber, onBillSaved }: PaymentBarProps) 
             />
           </div>
           {balanceDue > 0 && (
-            <div className="flex items-center justify-between pt-1">
-              <span className="text-xs text-amber font-medium flex items-center gap-1">
-                <BookOpen className="w-3 h-3" />
-                Balance to Khata
-              </span>
-              <span className="text-xs font-bold text-amber">
-                {formatINR(balanceDue)}
-              </span>
+            <div className="pt-2 space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-amber font-medium flex items-center gap-1">
+                  <BookOpen className="w-3 h-3" />
+                  Balance to Khata
+                </span>
+                <span className="text-xs font-bold text-amber">
+                  {formatINR(balanceDue)}
+                </span>
+              </div>
+              <label className="flex items-center gap-2 cursor-pointer bg-surface-hover p-2 rounded-lg border border-border">
+                <input
+                  type="checkbox"
+                  checked={waiveBalance}
+                  onChange={(e) => setWaiveBalance(e.target.checked)}
+                  className="rounded border-border text-primary focus:ring-primary w-4 h-4"
+                />
+                <span className="text-xs font-medium text-text-primary">
+                  Waive {formatINR(balanceDue)} (Settle Bill)
+                </span>
+              </label>
             </div>
           )}
         </div>

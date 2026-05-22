@@ -77,6 +77,8 @@ export const BillReceipt = forwardRef<HTMLDivElement, BillReceiptProps>(
 
     const halfGst = bill.gst_rate / 2;
     const taxableAmount = bill.subtotal - bill.discount_amount;
+    const roundedTotal = Math.round(bill.total);
+    const roundOff = roundedTotal - bill.total;
 
     const discountLabel = "Discount";
 
@@ -184,6 +186,13 @@ export const BillReceipt = forwardRef<HTMLDivElement, BillReceiptProps>(
               </div>
             </>
           )}
+
+          {Math.abs(roundOff) > 0.005 && (
+            <div style={rowStyle}>
+              <span>Round Off:</span>
+              <span>{roundOff > 0 ? "+" : "-"}{shortINR(Math.abs(roundOff))}</span>
+            </div>
+          )}
         </div>
 
         <div style={{ borderBottom: "1px dashed #000", margin: "8px 0" }} />
@@ -191,7 +200,7 @@ export const BillReceipt = forwardRef<HTMLDivElement, BillReceiptProps>(
         {/* ── Section 4: Total in bold ── */}
         <div style={{ ...rowStyle, ...boldStyle, fontSize: "16px" }}>
           <span>TOTAL:</span>
-          <span>₹{shortINR(bill.total)}</span>
+          <span>₹{shortINR(roundedTotal)}</span>
         </div>
 
         <div style={{ borderBottom: "1px dashed #000", margin: "8px 0" }} />

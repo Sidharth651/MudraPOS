@@ -44,7 +44,7 @@ export function CustomerSelector() {
   };
 
   const handleClear = () => {
-    setCustomer(null, null);
+    setCustomer(null, "Walk In");
     setSearch("");
   };
 
@@ -53,60 +53,69 @@ export function CustomerSelector() {
     openDrawer("add-customer");
   };
 
-  // If a customer is selected, show the selected state
-  if (customer_id && customer_name) {
-    return (
-      <div className="flex items-center gap-2 px-3 py-2 bg-primary-50 rounded-xl border border-primary-100">
-        <div className="w-7 h-7 rounded-full bg-primary flex items-center justify-center flex-shrink-0">
-          <User className="w-3.5 h-3.5 text-white" />
-        </div>
-        <div className="flex-1 min-w-0">
-          <p className="text-sm font-medium text-text-primary truncate">
-            {customer_name}
-          </p>
-          <p className="text-[10px] text-text-muted">
-            {customerData.find((c) => c.id === customer_id)?.phone || ""}
-          </p>
-        </div>
-        <div className="flex items-center gap-1">
-          {isAdmin && (
-            <button
-              onClick={() => {
-                const customer = customerData.find((c) => c.id === customer_id);
-                if (customer) openDrawer("edit-customer", customer as unknown as Record<string, unknown>);
-              }}
-              className="p-1 rounded-lg hover:bg-surface-hover/50 text-text-muted hover:text-primary transition-colors"
-              title="Edit customer"
-            >
-              <Edit className="w-3.5 h-3.5" />
-            </button>
-          )}
-          <button
-            onClick={handleClear}
-            className="p-1 rounded-lg hover:bg-surface-hover/50 text-text-muted hover:text-red transition-colors"
-            title="Remove customer"
-          >
-            <X className="w-3.5 h-3.5" />
-          </button>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div ref={dropdownRef} className="relative">
       {/* Trigger */}
-      <button
-        onClick={() => {
-          setIsOpen(!isOpen);
-          setTimeout(() => inputRef.current?.focus(), 100);
-        }}
-        className="w-full flex items-center gap-2 px-3 py-2 border border-border rounded-xl text-sm text-text-muted hover:border-primary hover:bg-surface-hover transition-colors"
-      >
-        <User className="w-4 h-4 flex-shrink-0" />
-        <span className="flex-1 text-left">Select customer (optional)</span>
-        <ChevronDown className={cn("w-4 h-4 transition-transform", isOpen && "rotate-180")} />
-      </button>
+      {customer_id ? (
+        <div className="flex items-center gap-2 px-3 py-2 bg-primary-50 rounded-xl border border-primary-100">
+          <button
+            onClick={() => {
+              setIsOpen(!isOpen);
+              setTimeout(() => inputRef.current?.focus(), 100);
+            }}
+            className="flex-1 flex items-center gap-2 text-left min-w-0"
+          >
+            <div className="w-7 h-7 rounded-full bg-primary flex items-center justify-center flex-shrink-0">
+              <User className="w-3.5 h-3.5 text-white" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium text-text-primary truncate">
+                {customer_name}
+              </p>
+              <p className="text-[10px] text-text-muted">
+                {customerData.find((c) => c.id === customer_id)?.phone || ""}
+              </p>
+            </div>
+          </button>
+          <div className="flex items-center gap-1">
+            {isAdmin && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  const customer = customerData.find((c) => c.id === customer_id);
+                  if (customer) openDrawer("edit-customer", customer as unknown as Record<string, unknown>);
+                }}
+                className="p-1 rounded-lg hover:bg-surface-hover/50 text-text-muted hover:text-primary transition-colors"
+                title="Edit customer"
+              >
+                <Edit className="w-3.5 h-3.5" />
+              </button>
+            )}
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                handleClear();
+              }}
+              className="p-1 rounded-lg hover:bg-surface-hover/50 text-text-muted hover:text-red transition-colors"
+              title="Remove customer"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        </div>
+      ) : (
+        <button
+          onClick={() => {
+            setIsOpen(!isOpen);
+            setTimeout(() => inputRef.current?.focus(), 100);
+          }}
+          className="w-full flex items-center gap-2 px-3 py-2 border border-primary-100 bg-primary-50/50 rounded-xl text-sm text-text-primary hover:border-primary hover:bg-primary-50 transition-colors"
+        >
+          <User className="w-4 h-4 text-primary flex-shrink-0" />
+          <span className="flex-1 text-left font-medium">Walk In (Default)</span>
+          <ChevronDown className={cn("w-4 h-4 text-text-muted transition-transform", isOpen && "rotate-180")} />
+        </button>
+      )}
 
       {/* Dropdown */}
       {isOpen && (

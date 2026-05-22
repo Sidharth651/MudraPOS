@@ -10,7 +10,7 @@ import { MetreInputModal } from "./metre-input-modal";
 export function ProductSelector() {
   const [search, setSearch] = useState("");
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
-  const { data: products } = useProducts();
+  const { data: products, isLoading } = useProducts();
   const { data: categories } = useCategories();
   const productData = products || [];
 
@@ -65,13 +65,18 @@ export function ProductSelector() {
           })}
         </div>
 
-        {filtered.length === 0 && (
+        {isLoading ? (
+          <div className="flex flex-col items-center justify-center py-12 text-text-muted">
+            <div className="w-8 h-8 mb-4 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+            <p className="text-sm">Loading products...</p>
+          </div>
+        ) : filtered.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-12 text-text-muted">
             <Search className="w-10 h-10 mb-3 opacity-40" />
             <p className="text-sm">No products found</p>
             <p className="text-xs mt-1">Try a different search term</p>
           </div>
-        )}
+        ) : null}
       </div>
 
       {/* Metre Input Modal */}

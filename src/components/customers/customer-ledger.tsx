@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Plus, ArrowLeft, Phone, MapPin, Trash2, Edit } from "lucide-react";
+import { Plus, ArrowLeft, Phone, MapPin, Trash2, Edit, Eye } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { createClient } from "@/lib/supabase/client";
 import { useCustomers, useLedgerEntries } from "@/lib/hooks";
@@ -10,6 +10,7 @@ import { confirmToast } from "@/lib/toast-utils";
 import { useUIStore } from "@/stores/ui-store";
 import { useAuthStore } from "@/stores/auth-store";
 import toast from "react-hot-toast";
+import { InvoiceViewDrawer } from "@/app/invoices/components/invoice-view-drawer";
 
 export function CustomerLedger() {
   const { selectedCustomerId, setSelectedCustomerId, openDrawer } = useUIStore();
@@ -20,6 +21,7 @@ export function CustomerLedger() {
   const queryClient = useQueryClient();
   const [isDeleting, setIsDeleting] = useState<string | null>(null);
   const [isDeletingCustomer, setIsDeletingCustomer] = useState(false);
+  const [viewBillId, setViewBillId] = useState<string | null>(null);
 
   const handleDeleteCustomer = () => {
     confirmToast("Are you sure you want to delete this customer? All their bills, payments, and associated data will be permanently deleted. This action cannot be undone.", async () => {
@@ -178,13 +180,15 @@ export function CustomerLedger() {
               {customer.address}
             </div>
           </div>
-          <button
-            onClick={() => openDrawer("add-payment", { customer: customer as unknown as Record<string, unknown> })}
-            className="flex items-center gap-1.5 px-3 py-2 bg-green text-white rounded-xl text-xs font-semibold hover:bg-green-dark transition-colors"
-          >
-            <Plus className="w-3.5 h-3.5" />
-            Add Payment
-          </button>
+          {isAdmin && (
+            <button
+              onClick={() => openDrawer("add-payment", { customer: customer as unknown as Record<string, unknown> })}
+              className="flex items-center gap-1.5 px-3 py-2 bg-green text-white rounded-xl text-xs font-semibold hover:bg-green-dark transition-colors"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              Add Payment
+            </button>
+          )}
         </div>
 
         {/* Outstanding Balance */}
@@ -263,6 +267,15 @@ export function CustomerLedger() {
                           >
                             {isPurchase ? "+" : "-"}{formatINR(entry.amount)}
                           </p>
+                          {isPurchase && (
+                            <button
+                              onClick={() => setViewBillId(entry.id)}
+                              className="text-text-muted hover:text-primary transition-colors p-1 rounded-md hover:bg-primary-light"
+                              title="View Bill"
+                            >
+                              <Eye className="w-3.5 h-3.5" />
+                            </button>
+                          )}
                           {isAdmin && (
                             <button
                               onClick={() => handleDeleteEntry(entry.id, entry.type)}
@@ -286,6 +299,12 @@ export function CustomerLedger() {
           </div>
         )}
       </div>
+
+      <InvoiceViewDrawer 
+        billId={viewBillId} 
+        open={!!viewBillId} 
+        onClose={() => setViewBillId(null)} 
+      />
     </div>
   );
 }

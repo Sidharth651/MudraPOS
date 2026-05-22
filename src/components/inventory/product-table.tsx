@@ -15,7 +15,7 @@ interface ProductTableProps {
 
 export function ProductTable({ searchQuery }: ProductTableProps) {
   const { openDrawer } = useUIStore();
-  const { data: queryProducts } = useProducts();
+  const { data: queryProducts, isLoading } = useProducts();
   const supabase = useSupabase();
   const queryClient = useQueryClient();
   const role = useAuthStore((state) => state.role);
@@ -105,11 +105,16 @@ export function ProductTable({ searchQuery }: ProductTableProps) {
             ))}
           </tbody>
         </table>
-        {products.length === 0 && (
+        {isLoading ? (
+          <div className="py-12 flex flex-col items-center justify-center text-text-muted text-sm">
+            <div className="w-6 h-6 mb-2 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+            Loading products...
+          </div>
+        ) : products.length === 0 ? (
           <div className="py-12 text-center text-text-muted text-sm">
             No products found
           </div>
-        )}
+        ) : null}
       </div>
     </div>
   );

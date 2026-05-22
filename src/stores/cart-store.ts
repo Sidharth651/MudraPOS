@@ -5,6 +5,7 @@
 import { create } from "zustand";
 import { createClient } from "@/lib/supabase/client";
 import type { CartItem, PaymentMethod, Unit, Bill } from "@/types/database";
+import { formatINR } from "@/lib/utils";
 
 interface CartState {
   items: CartItem[];
@@ -35,7 +36,7 @@ interface CartState {
   setAmountReceived: (amount: number | null) => void;
   setCustomer: (id: string | null, name: string | null) => void;
   clearCart: () => void;
-  saveBill: (billNumber: string) => Promise<Bill | null>;
+  saveBill: (billNumber: string, waiveBalance?: boolean) => Promise<Bill | null>;
 
   // Computed (as functions)
   getSubtotal: () => number;
@@ -55,7 +56,7 @@ export const useCartStore = create<CartState>((set, get) => ({
   payment_method: "cash",
   amount_received: null,
   customer_id: null,
-  customer_name: null,
+  customer_name: "Walk In",
   saving: false,
 
   addItem: (product) => {
@@ -138,11 +139,11 @@ export const useCartStore = create<CartState>((set, get) => ({
       payment_method: "cash",
       amount_received: null,
       customer_id: null,
-      customer_name: null,
+      customer_name: "Walk In",
     });
   },
 
-  saveBill: async (billNumber: string) => {
+  saveBill: async (billNumber: string, waiveBalance?: boolean) => {
     const state = get();
     if (state.items.length === 0) return null;
 
@@ -156,7 +157,7 @@ export const useCartStore = create<CartState>((set, get) => ({
     const sgst = state.getSGST();
     const gstAmount = state.getGSTAmount();
     const total = state.getTotal();
-    const balanceDue = state.getBalanceDue();
+    const balanceDue = waiveBalance ? 0 : state.getBalanceDue();
 
     // Determine effective payment method for the bill record
     // If partial payment via cash/upi, the bill is still recorded as cash/upi
@@ -224,13 +225,13 @@ export const useCartStore = create<CartState>((set, get) => ({
         }
 
         // 4. Insert payment record for the upfront amount paid (if any)
-        const paidAmount = total - balanceDue;
-        if (paidAmount > 0) {
+        const actualPaidAmount = waiveBalance && state.amount_received !== null ? state.amount_received : (total - balanceDue);
+        if (actualPaidAmount > 0) {
           await supabase.from("payments").insert({
             customer_id: state.customer_id,
-            amount: paidAmount,
+            amount: actualPaidAmount,
             payment_method: billPaymentMethod,
-            notes: `Upfront payment for Bill ${billNumber}`,
+            notes: waiveBalance ? `Upfront payment for Bill ${billNumber} (${formatINR(state.getBalanceDue())} Waived)` : `Upfront payment for Bill ${billNumber}`,
           });
         }
       }
@@ -276,7 +277,7 @@ export const useCartStore = create<CartState>((set, get) => ({
         payment_method: "cash",
         amount_received: null,
         customer_id: null,
-        customer_name: null,
+        customer_name: "Walk In",
         saving: false,
       });
 
