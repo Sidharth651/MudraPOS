@@ -1,7 +1,7 @@
 "use client";
 
 import { forwardRef } from "react";
-import { formatINR, formatDateTime } from "@/lib/utils";
+import { formatINR, formatDate } from "@/lib/utils";
 import { useReceiptSettingsStore } from "@/stores/receipt-settings-store";
 
 // ============================================================
@@ -111,7 +111,7 @@ export const BillReceipt = forwardRef<HTMLDivElement, BillReceiptProps>(
           </div>
           <div style={rowStyle}>
             <span>Date:</span>
-            <span>{formatDateTime(bill.created_at)}</span>
+            <span>{formatDate(bill.created_at)}</span>
           </div>
           {bill.customer_name && (
             <div style={rowStyle}>
