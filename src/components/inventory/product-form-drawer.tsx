@@ -23,7 +23,7 @@ export function ProductFormDrawer() {
   const [category, setCategory] = useState("fabric");
   const [price, setPrice] = useState("");
   const [unit, setUnit] = useState("metre");
-  const [hsn, setHsn] = useState("");
+  const [hsn, setHsn] = useState("5802");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
@@ -39,7 +39,7 @@ export function ProductFormDrawer() {
       setCategory(categories?.[0]?.name || "fabric");
       setPrice("");
       setUnit("metre");
-      setHsn("");
+      setHsn("5802");
     }
   }, [isEdit, product, categories]);
 
@@ -153,7 +153,7 @@ export function ProductFormDrawer() {
             type="text"
             value={hsn}
             onChange={(e) => setHsn(e.target.value)}
-            placeholder="5208"
+            placeholder="5802"
             className={inputClass}
           />
         </div>

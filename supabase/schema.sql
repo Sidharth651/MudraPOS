@@ -8,6 +8,7 @@
 CREATE TABLE IF NOT EXISTS categories (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   name TEXT NOT NULL UNIQUE,
+  preferred_mtr NUMERIC(10, 2),
   created_at TIMESTAMPTZ DEFAULT now()
 );
 

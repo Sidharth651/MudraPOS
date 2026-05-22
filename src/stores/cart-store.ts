@@ -29,6 +29,7 @@ interface CartState {
   }) => void;
   removeItem: (id: string) => void;
   updateQuantity: (id: string, quantity: number) => void;
+  updateItemDetails: (id: string, updates: Partial<CartItem>) => void;
   setDiscount: (type: "percentage" | "flat", value: number) => void;
   setPaymentMethod: (method: PaymentMethod) => void;
   setAmountReceived: (amount: number | null) => void;
@@ -70,7 +71,7 @@ export const useCartStore = create<CartState>((set, get) => ({
           unit: product.unit,
           unit_price: product.unit_price,
           subtotal: product.quantity * product.unit_price,
-          hsn_code: product.hsn_code,
+          hsn_code: product.hsn_code || "5802",
           pieces: product.pieces,
           metres_per_piece: product.metres_per_piece,
         },
@@ -91,6 +92,20 @@ export const useCartStore = create<CartState>((set, get) => ({
           ? { ...item, quantity, subtotal: quantity * item.unit_price }
           : item
       ),
+    }));
+  },
+
+  updateItemDetails: (id, updates) => {
+    set((state) => ({
+      items: state.items.map((item) => {
+        if (item.id === id) {
+          const updated = { ...item, ...updates };
+          // Recalculate subtotal in case quantity or unit_price changed
+          updated.subtotal = updated.quantity * updated.unit_price;
+          return updated;
+        }
+        return item;
+      }),
     }));
   },
 

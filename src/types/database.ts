@@ -5,6 +5,7 @@
 export interface Category {
   id: string;
   name: string;
+  preferred_mtr?: number;
   created_at: string;
 }
 

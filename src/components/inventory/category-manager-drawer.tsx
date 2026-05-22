@@ -18,8 +18,10 @@ export function CategoryManagerDrawer() {
   const queryClient = useQueryClient();
 
   const [newCategoryName, setNewCategoryName] = useState("");
+  const [newPreferredMtr, setNewPreferredMtr] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editName, setEditName] = useState("");
+  const [editPreferredMtr, setEditPreferredMtr] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleAddCategory = async () => {
@@ -27,9 +29,14 @@ export function CategoryManagerDrawer() {
     setIsSubmitting(true);
     const toastId = toast.loading("Adding category...");
     try {
-      const { error } = await supabase.from("categories").insert([{ name: newCategoryName.trim() }]);
+      const preferredMtrVal = newPreferredMtr ? parseFloat(newPreferredMtr) : null;
+      const { error } = await supabase.from("categories").insert([{ 
+        name: newCategoryName.trim(),
+        preferred_mtr: preferredMtrVal
+      }]);
       if (error) throw error;
       setNewCategoryName("");
+      setNewPreferredMtr("");
       queryClient.invalidateQueries({ queryKey: ["categories"] });
       toast.success("Category added successfully.", { id: toastId });
     } catch (error) {
@@ -45,7 +52,11 @@ export function CategoryManagerDrawer() {
     setIsSubmitting(true);
     const toastId = toast.loading("Updating category...");
     try {
-      const { error } = await supabase.from("categories").update({ name: editName.trim() }).eq("id", id);
+      const preferredMtrVal = editPreferredMtr ? parseFloat(editPreferredMtr) : null;
+      const { error } = await supabase.from("categories").update({ 
+        name: editName.trim(),
+        preferred_mtr: preferredMtrVal
+      }).eq("id", id);
       if (error) throw error;
       setEditingId(null);
       queryClient.invalidateQueries({ queryKey: ["categories"] });
@@ -91,6 +102,15 @@ export function CategoryManagerDrawer() {
               className="flex-1 border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors"
               onKeyDown={(e) => e.key === "Enter" && handleAddCategory()}
             />
+            <input
+              type="number"
+              step="0.01"
+              value={newPreferredMtr}
+              onChange={(e) => setNewPreferredMtr(e.target.value)}
+              placeholder="Pref. Mtr (e.g. 1.6)"
+              className="w-36 border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors"
+              onKeyDown={(e) => e.key === "Enter" && handleAddCategory()}
+            />
             <button
               onClick={handleAddCategory}
               disabled={isSubmitting || !newCategoryName.trim()}
@@ -124,6 +144,15 @@ export function CategoryManagerDrawer() {
                         autoFocus
                         onKeyDown={(e) => e.key === "Enter" && handleUpdateCategory(cat.id)}
                       />
+                      <input
+                        type="number"
+                        step="0.01"
+                        value={editPreferredMtr}
+                        onChange={(e) => setEditPreferredMtr(e.target.value)}
+                        placeholder="Pref. Mtr"
+                        className="w-24 border border-border rounded px-2 py-1 text-sm focus:outline-none focus:border-primary"
+                        onKeyDown={(e) => e.key === "Enter" && handleUpdateCategory(cat.id)}
+                      />
                       <button
                         onClick={() => handleUpdateCategory(cat.id)}
                         disabled={isSubmitting}
@@ -140,12 +169,20 @@ export function CategoryManagerDrawer() {
                     </div>
                   ) : (
                     <>
-                      <span className="text-sm font-medium text-text-primary">{cat.name}</span>
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-medium text-text-primary">{cat.name}</span>
+                        {cat.preferred_mtr && (
+                          <span className="text-xs bg-surface-hover text-text-muted px-1.5 py-0.5 rounded border border-border">
+                            {cat.preferred_mtr} mtr
+                          </span>
+                        )}
+                      </div>
                       <div className="flex items-center gap-1">
                         <button
                           onClick={() => {
                             setEditingId(cat.id);
                             setEditName(cat.name);
+                            setEditPreferredMtr(cat.preferred_mtr?.toString() || "");
                           }}
                           className="p-1.5 rounded hover:bg-surface-hover text-text-muted hover:text-primary transition-colors"
                         >

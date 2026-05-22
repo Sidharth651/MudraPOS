@@ -19,6 +19,7 @@ export function CartPanel({ billNumber, onBillSaved }: CartPanelProps) {
     discount_value,
     removeItem,
     updateQuantity,
+    updateItemDetails,
     setDiscount,
     clearCart,
     getSubtotal,
@@ -100,29 +101,91 @@ export function CartPanel({ billNumber, onBillSaved }: CartPanelProps) {
                   </button>
                 </div>
                 <div className="flex items-center justify-between mt-2">
-                  <div className="flex items-center gap-1.5">
-                    <button
-                      onClick={() =>
-                        updateQuantity(
-                          item.id,
-                          Math.max(item.unit === "metre" ? 0.5 : 1, item.quantity - (item.unit === "metre" ? 0.5 : 1))
-                        )
-                      }
-                      className="w-7 h-7 rounded-lg border border-border flex items-center justify-center hover:bg-surface-hover transition-colors"
-                    >
-                      <Minus className="w-3 h-3" />
-                    </button>
-                    <span className="text-sm font-semibold w-12 text-center">
-                      {item.quantity}{item.unit === "metre" ? "m" : ""}
-                    </span>
-                    <button
-                      onClick={() =>
-                        updateQuantity(item.id, item.quantity + (item.unit === "metre" ? 0.5 : 1))
-                      }
-                      className="w-7 h-7 rounded-lg border border-border flex items-center justify-center hover:bg-surface-hover transition-colors"
-                    >
-                      <Plus className="w-3 h-3" />
-                    </button>
+                  <div className="flex items-center gap-2">
+                    {item.unit === "metre" ? (
+                      <div className="flex items-center bg-surface-hover rounded-lg p-1 border border-border">
+                        <input
+                          type="number"
+                          value={item.metres_per_piece || item.quantity}
+                          onChange={(e) => {
+                            const m = Math.max(0, parseFloat(e.target.value) || 0);
+                            const p = item.pieces || 1;
+                            updateItemDetails(item.id, {
+                              metres_per_piece: m,
+                              pieces: p,
+                              quantity: Number((m * p).toFixed(2))
+                            });
+                          }}
+                          step="0.1"
+                          min="0"
+                          className="w-14 text-center text-sm font-semibold bg-transparent focus:outline-none"
+                          placeholder="Mtrs"
+                        />
+                        <span className="text-xs text-text-muted font-medium ml-1">m ×</span>
+                        <button
+                          onClick={() => {
+                            const p = Math.max(1, (item.pieces || 1) - 1);
+                            const m = item.metres_per_piece || item.quantity;
+                            updateItemDetails(item.id, { metres_per_piece: m, pieces: p, quantity: Number((m * p).toFixed(2)) });
+                          }}
+                          className="w-6 h-6 ml-1 rounded border border-border flex items-center justify-center hover:bg-surface-hover transition-colors"
+                        >
+                          <Minus className="w-3 h-3" />
+                        </button>
+                        <input
+                          type="number"
+                          value={item.pieces || 1}
+                          onChange={(e) => {
+                            const p = Math.max(1, parseInt(e.target.value) || 1);
+                            const m = item.metres_per_piece || item.quantity;
+                            updateItemDetails(item.id, {
+                              metres_per_piece: m,
+                              pieces: p,
+                              quantity: Number((m * p).toFixed(2))
+                            });
+                          }}
+                          step="1"
+                          min="1"
+                          className="w-8 text-center text-sm font-semibold bg-transparent focus:outline-none"
+                          placeholder="Pcs"
+                        />
+                        <button
+                          onClick={() => {
+                            const p = (item.pieces || 1) + 1;
+                            const m = item.metres_per_piece || item.quantity;
+                            updateItemDetails(item.id, { metres_per_piece: m, pieces: p, quantity: Number((m * p).toFixed(2)) });
+                          }}
+                          className="w-6 h-6 mr-1 rounded border border-border flex items-center justify-center hover:bg-surface-hover transition-colors"
+                        >
+                          <Plus className="w-3 h-3" />
+                        </button>
+                        <span className="text-xs text-text-muted font-medium pr-1">pcs</span>
+                      </div>
+                    ) : (
+                      <div className="flex items-center bg-surface-hover rounded-lg p-1 border border-border">
+                        <button
+                          onClick={() => updateQuantity(item.id, Math.max(1, item.quantity - 1))}
+                          className="w-7 h-7 rounded border border-border flex items-center justify-center hover:bg-surface-hover transition-colors"
+                        >
+                          <Minus className="w-3 h-3" />
+                        </button>
+                        <input
+                          type="number"
+                          value={item.quantity}
+                          onChange={(e) => updateQuantity(item.id, Math.max(0, parseInt(e.target.value) || 0))}
+                          step="1"
+                          min="0"
+                          className="w-12 text-center text-sm font-semibold bg-transparent focus:outline-none"
+                        />
+                        <button
+                          onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                          className="w-7 h-7 mr-1 rounded border border-border flex items-center justify-center hover:bg-surface-hover transition-colors"
+                        >
+                          <Plus className="w-3 h-3" />
+                        </button>
+                        <span className="text-xs text-text-muted font-medium pr-1">pcs</span>
+                      </div>
+                    )}
                   </div>
                   <span className="text-sm font-semibold text-text-primary">
                     {formatINR(item.subtotal)}

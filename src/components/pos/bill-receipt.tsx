@@ -78,10 +78,7 @@ export const BillReceipt = forwardRef<HTMLDivElement, BillReceiptProps>(
     const halfGst = bill.gst_rate / 2;
     const taxableAmount = bill.subtotal - bill.discount_amount;
 
-    const discountLabel =
-      bill.discount_type === "percentage"
-        ? `Discount (${bill.discount_value}%)`
-        : "Discount";
+    const discountLabel = "Discount";
 
     const receiptStyle: React.CSSProperties = {
       width: printWidth || "300px",
@@ -145,8 +142,8 @@ export const BillReceipt = forwardRef<HTMLDivElement, BillReceiptProps>(
                   </span>
                 )}
               </div>
-              {showHsn && item.hsn_code && (
-                <div style={{ fontSize: "10px", color: "#444" }}>HSN: {item.hsn_code}</div>
+              {showHsn && (
+                <div style={{ fontSize: "10px", color: "#444" }}>HSN: {item.hsn_code || "5802"}</div>
               )}
             </div>
             <span style={{ width: "45px", textAlign: "right" }}>{shortINR(item.unit_price)}</span>

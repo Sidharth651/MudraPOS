@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { X, Plus, Minus } from "lucide-react";
 import { formatINR } from "@/lib/utils";
 import { useCartStore } from "@/stores/cart-store";
+import { useCategories } from "@/lib/hooks";
 import type { Product } from "@/types/database";
 
 interface MetreInputModalProps {
@@ -12,9 +13,20 @@ interface MetreInputModalProps {
 }
 
 export function MetreInputModal({ product, onClose }: MetreInputModalProps) {
-  const [quantity, setQuantity] = useState(product.unit === "metre" ? 1.6 : 1);
+  const { data: categories } = useCategories();
+  const defaultQuantity = product.unit === "metre" ? 1.6 : 1;
+  const [quantity, setQuantity] = useState(defaultQuantity);
   const [pieces, setPieces] = useState(1);
   const addItem = useCartStore((s) => s.addItem);
+
+  useEffect(() => {
+    if (product.unit === "metre" && categories) {
+      const category = categories.find((c) => c.name === product.category);
+      if (category && category.preferred_mtr) {
+        setQuantity((prev) => prev === defaultQuantity ? category.preferred_mtr! : prev);
+      }
+    }
+  }, [product.unit, product.category, categories]);
 
   const step = product.unit === "metre" ? 0.1 : 1;
   const totalQuantity = product.unit === "metre" ? Number((quantity * pieces).toFixed(2)) : quantity;
@@ -70,12 +82,6 @@ export function MetreInputModal({ product, onClose }: MetreInputModalProps) {
             {product.unit === "metre" ? "Metres per piece" : "Quantity"}
           </label>
           <div className="flex items-center gap-3">
-            <button
-              onClick={() => setQuantity(Number(Math.max(step, quantity - step).toFixed(2)))}
-              className="w-12 h-12 shrink-0 rounded-xl border border-border flex items-center justify-center hover:bg-surface-hover transition-colors"
-            >
-              <Minus className="w-5 h-5" />
-            </button>
             <input
               type="number"
               value={quantity}
@@ -84,12 +90,6 @@ export function MetreInputModal({ product, onClose }: MetreInputModalProps) {
               min={step}
               className="flex-1 min-w-0 h-12 text-center text-xl font-bold border border-border rounded-xl px-4 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
             />
-            <button
-              onClick={() => setQuantity(Number((quantity + step).toFixed(2)))}
-              className="w-12 h-12 shrink-0 rounded-xl border border-border flex items-center justify-center hover:bg-surface-hover transition-colors"
-            >
-              <Plus className="w-5 h-5" />
-            </button>
           </div>
         </div>
 
