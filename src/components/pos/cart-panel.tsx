@@ -89,6 +89,7 @@ export function CartPanel({ billNumber, onBillSaved }: CartPanelProps) {
                     </h4>
                     <p className="text-xs text-text-muted mt-0.5">
                       {formatINR(item.unit_price)}/{item.unit === "metre" ? "m" : "pc"}
+                      {item.unit === "metre" && item.pieces && item.pieces > 1 && ` • ${item.metres_per_piece}m × ${item.pieces} pcs`}
                     </p>
                   </div>
                   <button

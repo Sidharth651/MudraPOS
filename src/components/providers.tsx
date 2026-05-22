@@ -23,10 +23,19 @@ export function Providers({ children }: { children: React.ReactNode }) {
   );
 
   return (
-    <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+    <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false} disableTransitionOnChange>
       <QueryClientProvider client={queryClient}>
         {children}
-        <Toaster position="bottom-right" />
+        <Toaster 
+          position="bottom-right" 
+          toastOptions={{
+            style: {
+              background: 'var(--color-surface)',
+              color: 'var(--color-text-primary)',
+              border: '1px solid var(--color-border)',
+            }
+          }}
+        />
       </QueryClientProvider>
     </ThemeProvider>
   );

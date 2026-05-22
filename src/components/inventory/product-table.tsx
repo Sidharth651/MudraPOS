@@ -6,6 +6,7 @@ import { useUIStore } from "@/stores/ui-store";
 import { Pencil, Trash2 } from "lucide-react";
 import { confirmToast } from "@/lib/toast-utils";
 import { useQueryClient } from "@tanstack/react-query";
+import { useAuthStore } from "@/stores/auth-store";
 import toast from "react-hot-toast";
 
 interface ProductTableProps {
@@ -17,6 +18,8 @@ export function ProductTable({ searchQuery }: ProductTableProps) {
   const { data: queryProducts } = useProducts();
   const supabase = useSupabase();
   const queryClient = useQueryClient();
+  const role = useAuthStore((state) => state.role);
+  const isAdmin = role === "admin";
 
   let products = queryProducts ? [...queryProducts] : [];
 
@@ -76,22 +79,26 @@ export function ProductTable({ searchQuery }: ProductTableProps) {
                 <td className="px-4 py-3 text-text-muted capitalize">{product.category}</td>
                 <td className="px-4 py-3">
                   <div className="flex items-center justify-center gap-1">
-                    <button
-                      onClick={() =>
-                        openDrawer("edit-product", { product: product as unknown as Record<string, unknown> })
-                      }
-                      className="p-1.5 rounded-lg hover:bg-primary-light text-text-muted hover:text-primary transition-colors"
-                      title="Edit"
-                    >
-                      <Pencil className="w-3.5 h-3.5" />
-                    </button>
-                    <button
-                      onClick={() => handleDelete(product.id, product.name)}
-                      className="p-1.5 rounded-lg hover:bg-red-light text-text-muted hover:text-red transition-colors"
-                      title="Delete"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
+                    {isAdmin && (
+                      <>
+                        <button
+                          onClick={() =>
+                            openDrawer("edit-product", { product: product as unknown as Record<string, unknown> })
+                          }
+                          className="p-1.5 rounded-lg hover:bg-primary-light text-text-muted hover:text-primary transition-colors"
+                          title="Edit"
+                        >
+                          <Pencil className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          onClick={() => handleDelete(product.id, product.name)}
+                          className="p-1.5 rounded-lg hover:bg-red-light text-text-muted hover:text-red transition-colors"
+                          title="Delete"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </>
+                    )}
                   </div>
                 </td>
               </tr>

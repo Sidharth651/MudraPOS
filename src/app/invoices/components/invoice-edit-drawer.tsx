@@ -33,6 +33,7 @@ export function InvoiceEditDrawer({ billId, open, onClose }: InvoiceEditDrawerPr
   // For adding new items
   const [selectedProductId, setSelectedProductId] = useState("");
   const [newQuantity, setNewQuantity] = useState("1");
+  const [newPieces, setNewPieces] = useState("1");
 
   // Initialize state when bill is loaded
   useEffect(() => {
@@ -87,26 +88,30 @@ export function InvoiceEditDrawer({ billId, open, onClose }: InvoiceEditDrawerPr
   const handleAddItem = () => {
     if (!selectedProductId || !products) return;
     const qty = parseFloat(newQuantity);
-    if (isNaN(qty) || qty <= 0) return;
+    const pcs = parseInt(newPieces) || 1;
+    if (isNaN(qty) || qty <= 0 || pcs <= 0) return;
 
     const product = products.find(p => p.id === selectedProductId);
     if (!product) return;
+
+    const totalQty = product.unit === "metre" ? Number((qty * pcs).toFixed(2)) : qty;
 
     const newItem: BillItem = {
       id: `new-${Date.now()}`,
       bill_id: bill!.id,
       product_id: product.id,
       product_name: product.name,
-      quantity: qty,
+      quantity: totalQty,
       unit: product.unit,
       unit_price: product.price_per_unit,
-      subtotal: qty * product.price_per_unit,
+      subtotal: totalQty * product.price_per_unit,
       hsn_code: product.hsn_code,
     };
 
     setItems([...items, newItem]);
     setSelectedProductId("");
     setNewQuantity("1");
+    setNewPieces("1");
   };
 
   const handleSave = async () => {
@@ -300,7 +305,9 @@ export function InvoiceEditDrawer({ billId, open, onClose }: InvoiceEditDrawerPr
                 </select>
               </div>
               <div className="w-20">
-                <label className="text-xs font-medium text-text-muted block mb-1">Qty</label>
+                <label className="text-xs font-medium text-text-muted block mb-1">
+                  {products?.find(p => p.id === selectedProductId)?.unit === 'metre' ? 'M/pc' : 'Qty'}
+                </label>
                 <input 
                   type="number" 
                   value={newQuantity}
@@ -308,10 +315,22 @@ export function InvoiceEditDrawer({ billId, open, onClose }: InvoiceEditDrawerPr
                   className="w-full bg-background text-text-primary border border-border rounded-lg px-2 py-1.5 text-sm focus:border-primary focus:outline-none"
                 />
               </div>
+              {products?.find(p => p.id === selectedProductId)?.unit === 'metre' && (
+                <div className="w-16">
+                  <label className="text-xs font-medium text-text-muted block mb-1">Pcs</label>
+                  <input 
+                    type="number" 
+                    value={newPieces}
+                    onChange={(e) => setNewPieces(e.target.value)}
+                    min="1"
+                    className="w-full bg-background text-text-primary border border-border rounded-lg px-2 py-1.5 text-sm focus:border-primary focus:outline-none"
+                  />
+                </div>
+              )}
               <button 
                 onClick={handleAddItem}
                 disabled={!selectedProductId}
-                className="bg-primary text-white p-1.5 rounded-lg hover:bg-primary-dark transition-colors disabled:opacity-50"
+                className="bg-primary text-white p-1.5 rounded-lg hover:bg-primary-dark transition-colors disabled:opacity-50 h-9"
               >
                 <Plus className="w-5 h-5" />
               </button>

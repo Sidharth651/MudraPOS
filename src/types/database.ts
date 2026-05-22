@@ -124,6 +124,8 @@ export interface CartItem {
   unit_price: number;
   subtotal: number;
   hsn_code?: string;
+  pieces?: number;
+  metres_per_piece?: number;
 }
 
 

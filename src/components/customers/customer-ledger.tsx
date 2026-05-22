@@ -8,10 +8,13 @@ import { useCustomers, useLedgerEntries } from "@/lib/hooks";
 import { formatINR, formatDateTime, cn } from "@/lib/utils";
 import { confirmToast } from "@/lib/toast-utils";
 import { useUIStore } from "@/stores/ui-store";
+import { useAuthStore } from "@/stores/auth-store";
 import toast from "react-hot-toast";
 
 export function CustomerLedger() {
   const { selectedCustomerId, setSelectedCustomerId, openDrawer } = useUIStore();
+  const role = useAuthStore((state) => state.role);
+  const isAdmin = role === "admin";
   const { data: customers } = useCustomers();
   const { data: ledgerEntries } = useLedgerEntries(selectedCustomerId || "");
   const queryClient = useQueryClient();
@@ -146,21 +149,25 @@ export function CustomerLedger() {
           <div>
             <div className="flex items-center gap-2">
               <h2 className="text-lg font-bold text-text-primary">{customer.name}</h2>
-              <button
-                onClick={() => openDrawer("edit-customer", customer as unknown as Record<string, unknown>)}
-                className="p-1 rounded-md text-text-muted hover:text-primary hover:bg-surface-hover transition-colors"
-                title="Edit Customer"
-              >
-                <Edit className="w-4 h-4" />
-              </button>
-              <button
-                onClick={handleDeleteCustomer}
-                disabled={isDeletingCustomer}
-                className="p-1 rounded-md text-text-muted hover:text-red hover:bg-red-light transition-colors disabled:opacity-50"
-                title="Delete Customer"
-              >
-                <Trash2 className="w-4 h-4" />
-              </button>
+              {isAdmin && (
+                <>
+                  <button
+                    onClick={() => openDrawer("edit-customer", customer as unknown as Record<string, unknown>)}
+                    className="p-1 rounded-md text-text-muted hover:text-primary hover:bg-surface-hover transition-colors"
+                    title="Edit Customer"
+                  >
+                    <Edit className="w-4 h-4" />
+                  </button>
+                  <button
+                    onClick={handleDeleteCustomer}
+                    disabled={isDeletingCustomer}
+                    className="p-1 rounded-md text-text-muted hover:text-red hover:bg-red-light transition-colors disabled:opacity-50"
+                    title="Delete Customer"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </>
+              )}
             </div>
             <div className="flex items-center gap-1 text-xs text-text-muted mt-1">
               <Phone className="w-3 h-3" />
@@ -256,14 +263,16 @@ export function CustomerLedger() {
                           >
                             {isPurchase ? "+" : "-"}{formatINR(entry.amount)}
                           </p>
-                          <button
-                            onClick={() => handleDeleteEntry(entry.id, entry.type)}
-                            disabled={isDeleting === entry.id}
-                            className="text-text-muted hover:text-red transition-colors p-1 rounded-md hover:bg-red-light disabled:opacity-50"
-                            title="Delete entry"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
+                          {isAdmin && (
+                            <button
+                              onClick={() => handleDeleteEntry(entry.id, entry.type)}
+                              disabled={isDeleting === entry.id}
+                              className="text-text-muted hover:text-red transition-colors p-1 rounded-md hover:bg-red-light disabled:opacity-50"
+                              title="Delete entry"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          )}
                         </div>
                         <p className="text-xs text-text-muted mt-1">
                           Bal: {formatINR(entry.balance_after)}

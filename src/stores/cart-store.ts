@@ -24,6 +24,8 @@ interface CartState {
     unit: Unit;
     unit_price: number;
     hsn_code?: string;
+    pieces?: number;
+    metres_per_piece?: number;
   }) => void;
   removeItem: (id: string) => void;
   updateQuantity: (id: string, quantity: number) => void;
@@ -69,6 +71,8 @@ export const useCartStore = create<CartState>((set, get) => ({
           unit_price: product.unit_price,
           subtotal: product.quantity * product.unit_price,
           hsn_code: product.hsn_code,
+          pieces: product.pieces,
+          metres_per_piece: product.metres_per_piece,
         },
       ],
     }));
@@ -232,6 +236,8 @@ export const useCartStore = create<CartState>((set, get) => ({
           unit_price: item.unit_price,
           subtotal: item.subtotal,
           hsn_code: item.hsn_code,
+          pieces: item.pieces,
+          metres_per_piece: item.metres_per_piece,
         })),
         subtotal,
         discount_type: state.discount_type,

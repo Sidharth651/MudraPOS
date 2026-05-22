@@ -38,6 +38,8 @@ export default function POSPage() {
       unit_price: item.unit_price,
       subtotal: item.subtotal,
       hsn_code: item.hsn_code,
+      pieces: item.pieces,
+      metres_per_piece: item.metres_per_piece,
     })),
     subtotal: cartState.getSubtotal(),
     discount_type: cartState.discount_type,

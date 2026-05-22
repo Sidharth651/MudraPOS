@@ -7,10 +7,13 @@ import { useUIStore } from "@/stores/ui-store";
 import { ProductTable } from "@/components/inventory/product-table";
 import { ProductFormDrawer } from "@/components/inventory/product-form-drawer";
 import { CategoryManagerDrawer } from "@/components/inventory/category-manager-drawer";
+import { useAuthStore } from "@/stores/auth-store";
 
 export default function InventoryPage() {
   const { openDrawer } = useUIStore();
   const [searchQuery, setSearchQuery] = useState("");
+  const role = useAuthStore((state) => state.role);
+  const isAdmin = role === "admin";
 
   const { data: products } = useProducts();
   const totalProducts = products?.length || 0;
@@ -28,19 +31,23 @@ export default function InventoryPage() {
           </p>
         </div>
         <div className="flex items-center gap-3">
-          <button
-            onClick={() => openDrawer("manage-categories")}
-            className="flex items-center gap-2 px-4 py-2.5 bg-surface border border-border text-text-primary rounded-xl text-sm font-semibold hover:bg-surface-hover transition-colors shadow-sm"
-          >
-            Manage Categories
-          </button>
-          <button
-            onClick={() => openDrawer("add-product")}
-            className="flex items-center gap-2 px-4 py-2.5 bg-primary text-white rounded-xl text-sm font-semibold hover:bg-primary-dark transition-colors shadow-sm"
-          >
-            <Plus className="w-4 h-4" />
-            Add New Fabric
-          </button>
+          {isAdmin && (
+            <>
+              <button
+                onClick={() => openDrawer("manage-categories")}
+                className="flex items-center gap-2 px-4 py-2.5 bg-surface border border-border text-text-primary rounded-xl text-sm font-semibold hover:bg-surface-hover transition-colors shadow-sm"
+              >
+                Manage Categories
+              </button>
+              <button
+                onClick={() => openDrawer("add-product")}
+                className="flex items-center gap-2 px-4 py-2.5 bg-primary text-white rounded-xl text-sm font-semibold hover:bg-primary-dark transition-colors shadow-sm"
+              >
+                <Plus className="w-4 h-4" />
+                Add New Fabric
+              </button>
+            </>
+          )}
         </div>
       </div>
 

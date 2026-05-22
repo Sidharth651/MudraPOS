@@ -13,10 +13,12 @@ interface MetreInputModalProps {
 
 export function MetreInputModal({ product, onClose }: MetreInputModalProps) {
   const [quantity, setQuantity] = useState(product.unit === "metre" ? 1.6 : 1);
+  const [pieces, setPieces] = useState(1);
   const addItem = useCartStore((s) => s.addItem);
 
   const step = product.unit === "metre" ? 0.1 : 1;
-  const subtotal = quantity * product.price_per_unit;
+  const totalQuantity = product.unit === "metre" ? Number((quantity * pieces).toFixed(2)) : quantity;
+  const subtotal = totalQuantity * product.price_per_unit;
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -27,14 +29,16 @@ export function MetreInputModal({ product, onClose }: MetreInputModalProps) {
   }, [onClose]);
 
   const handleAdd = () => {
-    if (quantity <= 0) return;
+    if (totalQuantity <= 0) return;
     addItem({
       product_id: product.id,
       product_name: product.name,
-      quantity,
+      quantity: totalQuantity,
       unit: product.unit,
       unit_price: product.price_per_unit,
       hsn_code: product.hsn_code,
+      pieces: product.unit === "metre" && pieces > 1 ? pieces : undefined,
+      metres_per_piece: product.unit === "metre" && pieces > 1 ? quantity : undefined,
     });
     onClose();
   };
@@ -63,7 +67,7 @@ export function MetreInputModal({ product, onClose }: MetreInputModalProps) {
         {/* Quantity Input */}
         <div className="mt-6">
           <label className="text-sm font-medium text-text-primary block mb-2">
-            {product.unit === "metre" ? "Metres" : "Quantity"}
+            {product.unit === "metre" ? "Metres per piece" : "Quantity"}
           </label>
           <div className="flex items-center gap-3">
             <button
@@ -89,6 +93,37 @@ export function MetreInputModal({ product, onClose }: MetreInputModalProps) {
           </div>
         </div>
 
+        {/* Pieces Input (Only for Metres) */}
+        {product.unit === "metre" && (
+          <div className="mt-4">
+            <label className="text-sm font-medium text-text-primary block mb-2">
+              Number of Pieces
+            </label>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => setPieces(Math.max(1, pieces - 1))}
+                className="w-12 h-12 shrink-0 rounded-xl border border-border flex items-center justify-center hover:bg-surface-hover transition-colors"
+              >
+                <Minus className="w-5 h-5" />
+              </button>
+              <input
+                type="number"
+                value={pieces}
+                onChange={(e) => setPieces(Math.max(1, parseInt(e.target.value) || 1))}
+                step={1}
+                min={1}
+                className="flex-1 min-w-0 h-12 text-center text-xl font-bold border border-border rounded-xl px-4 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+              />
+              <button
+                onClick={() => setPieces(pieces + 1)}
+                className="w-12 h-12 shrink-0 rounded-xl border border-border flex items-center justify-center hover:bg-surface-hover transition-colors"
+              >
+                <Plus className="w-5 h-5" />
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* Subtotal */}
         <div className="mt-4 p-3 bg-primary-50 rounded-xl">
           <div className="flex items-center justify-between">
@@ -96,7 +131,9 @@ export function MetreInputModal({ product, onClose }: MetreInputModalProps) {
             <span className="text-lg font-bold text-primary">{formatINR(subtotal)}</span>
           </div>
           <p className="text-xs text-text-muted mt-1">
-            {quantity} {product.unit === "metre" ? "m" : "pc"} × {formatINR(product.price_per_unit)}
+            {product.unit === "metre" 
+              ? `${quantity} m ${pieces > 1 ? `× ${pieces} pcs ` : ''}× ${formatINR(product.price_per_unit)}`
+              : `${quantity} pc × ${formatINR(product.price_per_unit)}`}
           </p>
         </div>
 
@@ -110,7 +147,7 @@ export function MetreInputModal({ product, onClose }: MetreInputModalProps) {
           </button>
           <button
             onClick={handleAdd}
-            disabled={quantity <= 0}
+            disabled={totalQuantity <= 0}
             className="flex-1 px-4 py-2.5 bg-primary text-white rounded-xl text-sm font-semibold hover:bg-primary-dark transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
           >
             Add to Cart

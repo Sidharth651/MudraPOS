@@ -137,7 +137,14 @@ export const BillReceipt = forwardRef<HTMLDivElement, BillReceiptProps>(
         {bill.items.map((item, i) => (
           <div key={i} style={{ display: "flex", justifyContent: "space-between", marginBottom: "4px" }}>
             <div style={{ flex: 1, paddingRight: "4px" }}>
-              <div style={{ wordBreak: "break-word" }}>{item.product_name}</div>
+              <div style={{ wordBreak: "break-word" }}>
+                {item.product_name}
+                {item.unit === "metre" && (item as any).pieces && (item as any).pieces > 1 && (
+                  <span style={{ fontSize: "10px", color: "#444", marginLeft: "4px" }}>
+                    ({(item as any).metres_per_piece}m × {(item as any).pieces} pcs)
+                  </span>
+                )}
+              </div>
               {showHsn && item.hsn_code && (
                 <div style={{ fontSize: "10px", color: "#444" }}>HSN: {item.hsn_code}</div>
               )}

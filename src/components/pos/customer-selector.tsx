@@ -5,6 +5,7 @@ import { User, Search, X, Plus, ChevronDown, Edit } from "lucide-react";
 import { useCustomers } from "@/lib/hooks";
 import { useCartStore } from "@/stores/cart-store";
 import { useUIStore } from "@/stores/ui-store";
+import { useAuthStore } from "@/stores/auth-store";
 import { formatINR, cn } from "@/lib/utils";
 
 export function CustomerSelector() {
@@ -12,6 +13,8 @@ export function CustomerSelector() {
   const { data: customers } = useCustomers();
   const customerData = customers || [];
   const { openDrawer } = useUIStore();
+  const role = useAuthStore((state) => state.role);
+  const isAdmin = role === "admin";
   const [isOpen, setIsOpen] = useState(false);
   const [search, setSearch] = useState("");
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -66,16 +69,18 @@ export function CustomerSelector() {
           </p>
         </div>
         <div className="flex items-center gap-1">
-          <button
-            onClick={() => {
-              const customer = customerData.find((c) => c.id === customer_id);
-              if (customer) openDrawer("edit-customer", customer as unknown as Record<string, unknown>);
-            }}
-            className="p-1 rounded-lg hover:bg-surface-hover/50 text-text-muted hover:text-primary transition-colors"
-            title="Edit customer"
-          >
-            <Edit className="w-3.5 h-3.5" />
-          </button>
+          {isAdmin && (
+            <button
+              onClick={() => {
+                const customer = customerData.find((c) => c.id === customer_id);
+                if (customer) openDrawer("edit-customer", customer as unknown as Record<string, unknown>);
+              }}
+              className="p-1 rounded-lg hover:bg-surface-hover/50 text-text-muted hover:text-primary transition-colors"
+              title="Edit customer"
+            >
+              <Edit className="w-3.5 h-3.5" />
+            </button>
+          )}
           <button
             onClick={handleClear}
             className="p-1 rounded-lg hover:bg-surface-hover/50 text-text-muted hover:text-red transition-colors"
@@ -147,17 +152,19 @@ export function CustomerSelector() {
                     </span>
                   )}
                 </button>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setIsOpen(false);
-                    openDrawer("edit-customer", customer as unknown as Record<string, unknown>);
-                  }}
-                  className="p-1.5 text-text-muted hover:text-primary rounded-md transition-colors flex-shrink-0"
-                  title="Edit Customer"
-                >
-                  <Edit className="w-3.5 h-3.5" />
-                </button>
+                {isAdmin && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setIsOpen(false);
+                      openDrawer("edit-customer", customer as unknown as Record<string, unknown>);
+                    }}
+                    className="p-1.5 text-text-muted hover:text-primary rounded-md transition-colors flex-shrink-0"
+                    title="Edit Customer"
+                  >
+                    <Edit className="w-3.5 h-3.5" />
+                  </button>
+                )}
               </div>
             ))}
 

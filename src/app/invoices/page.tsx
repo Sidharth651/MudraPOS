@@ -19,6 +19,7 @@ import toast from "react-hot-toast";
 import { InvoiceViewDrawer } from "./components/invoice-view-drawer";
 import { InvoiceEditDrawer } from "./components/invoice-edit-drawer";
 import { confirmToast } from "@/lib/toast-utils";
+import { useAuthStore } from "@/stores/auth-store";
 
 /* ── Badge helpers ──────────────────────────────────────────── */
 
@@ -141,6 +142,8 @@ function FilterChip({
 export default function InvoicesPage() {
   const { data: bills, isLoading } = useBills();
   const { mutateAsync: deleteBill } = useDeleteBill();
+  const role = useAuthStore((state) => state.role);
+  const isAdmin = role === "admin";
 
   const [viewBillId, setViewBillId] = useState<string | null>(null);
   const [editBillId, setEditBillId] = useState<string | null>(null);
@@ -449,12 +452,16 @@ export default function InvoicesPage() {
                             <button onClick={() => setViewBillId(bill.id)} className="p-1.5 text-text-muted hover:text-primary hover:bg-primary-light rounded-lg transition-colors" title="View">
                               <Eye className="w-4 h-4" />
                             </button>
-                            <button onClick={() => setEditBillId(bill.id)} className="p-1.5 text-text-muted hover:text-primary hover:bg-primary-light rounded-lg transition-colors" title="Edit">
-                              <Edit2 className="w-4 h-4" />
-                            </button>
-                            <button onClick={() => handleDelete(bill)} className="p-1.5 text-text-muted hover:text-red hover:bg-red-light rounded-lg transition-colors" title="Delete">
-                              <Trash2 className="w-4 h-4" />
-                            </button>
+                            {isAdmin && (
+                              <>
+                                <button onClick={() => setEditBillId(bill.id)} className="p-1.5 text-text-muted hover:text-primary hover:bg-primary-light rounded-lg transition-colors" title="Edit">
+                                  <Edit2 className="w-4 h-4" />
+                                </button>
+                                <button onClick={() => handleDelete(bill)} className="p-1.5 text-text-muted hover:text-red hover:bg-red-light rounded-lg transition-colors" title="Delete">
+                                  <Trash2 className="w-4 h-4" />
+                                </button>
+                              </>
+                            )}
                           </div>
                         </td>
                       </tr>
@@ -529,13 +536,17 @@ export default function InvoicesPage() {
                         <Eye className="w-3.5 h-3.5" />
                         View
                       </button>
-                      <button onClick={() => setEditBillId(bill.id)} className="flex-1 py-2 text-xs font-semibold text-text-primary bg-surface-hover border border-border hover:bg-border rounded-xl transition-colors flex items-center justify-center gap-1.5">
-                        <Edit2 className="w-3.5 h-3.5" />
-                        Edit
-                      </button>
-                      <button onClick={() => handleDelete(bill)} className="py-2 px-3 text-xs font-semibold text-red bg-red-light hover:bg-red/20 rounded-xl transition-colors flex items-center justify-center">
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
+                      {isAdmin && (
+                        <>
+                          <button onClick={() => setEditBillId(bill.id)} className="flex-1 py-2 text-xs font-semibold text-text-primary bg-surface-hover border border-border hover:bg-border rounded-xl transition-colors flex items-center justify-center gap-1.5">
+                            <Edit2 className="w-3.5 h-3.5" />
+                            Edit
+                          </button>
+                          <button onClick={() => handleDelete(bill)} className="py-2 px-3 text-xs font-semibold text-red bg-red-light hover:bg-red/20 rounded-xl transition-colors flex items-center justify-center">
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </>
+                      )}
                     </div>
                   </div>
                 );
