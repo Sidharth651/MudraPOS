@@ -157,94 +157,63 @@ export const useCartStore = create<CartState>((set, get) => ({
     const sgst = state.getSGST();
     const gstAmount = state.getGSTAmount();
     const total = state.getTotal();
-    const balanceDue = waiveBalance ? 0 : state.getBalanceDue();
+    const originalBalanceDue = state.getBalanceDue();
+    const balanceDue = waiveBalance ? 0 : originalBalanceDue;
+    const actualPaidAmount = waiveBalance && state.amount_received !== null ? state.amount_received : (total - balanceDue);
 
-    // Determine effective payment method for the bill record
-    // If partial payment via cash/upi, the bill is still recorded as cash/upi
     const billPaymentMethod = state.payment_method;
 
+    // Build items array for the RPC
+    const itemsJson = state.items.map((item) => ({
+      product_id: item.product_id,
+      product_name: item.product_name,
+      quantity: item.quantity,
+      unit: item.unit,
+      unit_price: item.unit_price,
+      subtotal: item.subtotal,
+      hsn_code: item.hsn_code || "5802",
+    }));
+
+    // Payment notes
+    const paymentNotes = actualPaidAmount > 0 && state.customer_id
+      ? (waiveBalance
+          ? `Upfront payment for Bill ${billNumber} (${formatINR(originalBalanceDue)} Waived)`
+          : `Upfront payment for Bill ${billNumber}`)
+      : null;
+
     try {
-      // 1. Insert bill
-      const { data: billData, error: billError } = await supabase
-        .from("bills")
-        .insert({
-          bill_number: billNumber,
-          customer_id: state.customer_id,
-          customer_name: state.customer_name,
-          subtotal,
-          discount_type: state.discount_type,
-          discount_value: state.discount_value,
-          discount_amount: discountAmount,
-          gst_rate: gstRate,
-          cgst_amount: cgst,
-          sgst_amount: sgst,
-          gst_amount: gstAmount,
-          total,
-          payment_method: billPaymentMethod,
-          status: balanceDue > 0 ? "pending" : "completed",
-        })
-        .select()
-        .single();
+      const { data, error } = await supabase.rpc('save_bill_with_payment', {
+        p_bill_number: billNumber,
+        p_customer_id: state.customer_id,
+        p_customer_name: state.customer_name,
+        p_subtotal: subtotal,
+        p_discount_type: state.discount_type,
+        p_discount_value: state.discount_value,
+        p_discount_amount: discountAmount,
+        p_gst_rate: gstRate,
+        p_cgst_amount: cgst,
+        p_sgst_amount: sgst,
+        p_gst_amount: gstAmount,
+        p_total: total,
+        p_amount_paid: actualPaidAmount,
+        p_payment_method: billPaymentMethod,
+        p_status: balanceDue > 0 ? "pending" : "completed",
+        p_items: itemsJson,
+        p_payment_notes: paymentNotes,
+        p_waived_amount: waiveBalance ? originalBalanceDue : 0,
+      });
 
-      if (billError) throw billError;
-
-      // 2. Insert bill items
-      const billItems = state.items.map((item) => ({
-        bill_id: billData.id,
-        product_id: item.product_id,
-        product_name: item.product_name,
-        quantity: item.quantity,
-        unit: item.unit,
-        unit_price: item.unit_price,
-        subtotal: item.subtotal,
-        hsn_code: item.hsn_code,
-      }));
-
-      const { error: itemsError } = await supabase
-        .from("bill_items")
-        .insert(billItems);
-
-      if (itemsError) throw itemsError;
-
-      // 3. Update customer outstanding balance and record upfront payment
-      if (state.customer_id) {
-        if (balanceDue > 0) {
-          const { data: custData } = await supabase
-            .from("customers")
-            .select("outstanding_balance")
-            .eq("id", state.customer_id)
-            .single();
-
-          if (custData) {
-            const newBalance = Number(custData.outstanding_balance) + balanceDue;
-            await supabase
-              .from("customers")
-              .update({ outstanding_balance: newBalance })
-              .eq("id", state.customer_id);
-          }
-        }
-
-        // 4. Insert payment record for the upfront amount paid (if any)
-        const actualPaidAmount = waiveBalance && state.amount_received !== null ? state.amount_received : (total - balanceDue);
-        if (actualPaidAmount > 0) {
-          await supabase.from("payments").insert({
-            customer_id: state.customer_id,
-            amount: actualPaidAmount,
-            payment_method: billPaymentMethod,
-            notes: waiveBalance ? `Upfront payment for Bill ${billNumber} (${formatINR(state.getBalanceDue())} Waived)` : `Upfront payment for Bill ${billNumber}`,
-          });
-        }
-      }
+      if (error) throw error;
 
       // Build the saved bill object for receipt printing
       const savedBill: Bill = {
-        id: billData.id,
+        id: data.id,
         bill_number: billNumber,
         customer_id: state.customer_id,
         customer_name: state.customer_name,
         items: state.items.map((item) => ({
           id: item.id,
-          bill_id: billData.id,
+          bill_id: data.id,
           product_id: item.product_id,
           product_name: item.product_name,
           quantity: item.quantity,
@@ -264,9 +233,10 @@ export const useCartStore = create<CartState>((set, get) => ({
         sgst_amount: sgst,
         gst_amount: gstAmount,
         total,
+        amount_paid: actualPaidAmount,
         payment_method: billPaymentMethod,
         status: balanceDue > 0 ? "pending" : "completed",
-        created_at: billData.created_at,
+        created_at: data.created_at,
       };
 
       // Clear cart after successful save

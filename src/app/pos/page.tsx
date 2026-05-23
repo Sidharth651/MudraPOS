@@ -50,6 +50,7 @@ export default function POSPage() {
     sgst_amount: cartState.getSGST(),
     gst_amount: cartState.getGSTAmount(),
     total: cartState.getTotal(),
+    amount_paid: 0,
     payment_method: cartState.payment_method,
     status: "pending",
     created_at: new Date().toISOString(),

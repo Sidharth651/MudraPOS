@@ -67,6 +67,7 @@ export function PaymentBar({ total, billNumber, onBillSaved }: PaymentBarProps) 
         queryClient.invalidateQueries({ queryKey: ["bills"] });
         queryClient.invalidateQueries({ queryKey: ["customers"] });
         queryClient.invalidateQueries({ queryKey: ["ledger"] });
+        queryClient.invalidateQueries({ queryKey: ["pending-bills"] });
         queryClient.invalidateQueries({ queryKey: ["nextBillNumber"] });
 
         onBillSaved(savedBill);

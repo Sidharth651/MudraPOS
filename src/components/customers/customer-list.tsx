@@ -4,6 +4,9 @@ import { User, Phone } from "lucide-react";
 import { useCustomers } from "@/lib/hooks";
 import { formatINR, cn } from "@/lib/utils";
 import { useUIStore } from "@/stores/ui-store";
+import { createClient } from "@/lib/supabase/client";
+import { useEffect, useState } from "react";
+import type { Customer } from "@/types/database";
 
 
 interface CustomerListProps {
@@ -13,8 +16,39 @@ interface CustomerListProps {
 export function CustomerList({ searchQuery }: CustomerListProps) {
   const { selectedCustomerId, setSelectedCustomerId } = useUIStore();
   const { data: queryCustomers } = useCustomers();
+  const [walkInBalance, setWalkInBalance] = useState(0);
 
-  let customers = (queryCustomers ? [...queryCustomers] : []).sort(
+  useEffect(() => {
+    async function fetchWalkInBalance() {
+      const supabase = createClient();
+      const { data } = await supabase
+        .from("bills")
+        .select("total")
+        .is("customer_id", null)
+        .eq("status", "pending");
+      
+      let balance = 0;
+      data?.forEach(b => balance += Number(b.total));
+      setWalkInBalance(balance);
+    }
+    fetchWalkInBalance();
+  }, []);
+
+  let customers = (queryCustomers ? [...queryCustomers] : []) as Customer[];
+  
+  // Inject Walk In Customer
+  const walkInCustomer: Customer = {
+    id: "walk-in",
+    name: "Walk In",
+    phone: "-",
+    address: "-",
+    outstanding_balance: walkInBalance,
+    created_at: new Date().toISOString()
+  };
+  
+  customers.push(walkInCustomer);
+
+  customers = customers.sort(
     (a, b) => Number(b.outstanding_balance) - Number(a.outstanding_balance)
   );
 

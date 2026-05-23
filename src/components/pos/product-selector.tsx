@@ -16,7 +16,8 @@ export function ProductSelector() {
 
   const filtered = productData.filter((p) => {
     if (!search) return true;
-    return p.name.toLowerCase().includes(search.toLowerCase());
+    const term = search.toLowerCase();
+    return p.name.toLowerCase().includes(term) || (p.sku_name && p.sku_name.toLowerCase().includes(term));
   });
 
   return (
@@ -48,6 +49,7 @@ export function ProductSelector() {
               >
                 <h3 className="text-sm font-semibold text-text-primary leading-tight group-hover:text-primary transition-colors">
                   {product.name}
+                  {product.sku_name && <span className="ml-1 text-xs text-text-muted font-normal">({product.sku_name})</span>}
                 </h3>
                 <p className="text-xs text-text-muted mt-0.5">
                   {product.category}{prefMtr ? ` • Pref: ${prefMtr}m` : ""}

@@ -55,6 +55,7 @@ export function ProductTable({ searchQuery }: ProductTableProps) {
             <tr className="bg-surface text-text-muted">
               <th className="text-left px-4 py-3 font-medium">#</th>
               <th className="text-left px-4 py-3 font-medium">Fabric Name</th>
+              <th className="text-left px-4 py-3 font-medium">SKU Name</th>
               <th className="text-right px-4 py-3 font-medium">Price</th>
               <th className="text-left px-4 py-3 font-medium">HSN Code</th>
               <th className="text-left px-4 py-3 font-medium">Category</th>
@@ -71,6 +72,7 @@ export function ProductTable({ searchQuery }: ProductTableProps) {
               >
                 <td className="px-4 py-3 text-text-muted">{idx + 1}</td>
                 <td className="px-4 py-3 font-medium text-text-primary">{product.name}</td>
+                <td className="px-4 py-3 text-text-muted">{product.sku_name || "-"}</td>
                 <td className="px-4 py-3 text-right font-medium">
                   {formatINR(product.price_per_unit)}
                   <span className="text-text-muted text-xs">/{product.unit === "metre" ? "m" : "pc"}</span>

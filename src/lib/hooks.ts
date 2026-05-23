@@ -112,12 +112,13 @@ export function useBills() {
   return useQuery({
     queryKey: ["bills"],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data: bills, error } = await supabase
         .from("bills")
         .select("*")
         .order("created_at", { ascending: false });
       if (error) throw error;
-      return data as Bill[];
+
+      return bills as Bill[];
     },
   });
 }
@@ -129,21 +130,38 @@ export function useLedgerEntries(customerId: string) {
     queryFn: async () => {
       if (!customerId) return [];
       
-      // Fetch bills
-      const { data: billsData, error: bErr } = await supabase
-        .from("bills")
-        .select("*")
-        .eq("customer_id", customerId);
+      let billsData: any[] = [];
+      let paymentsData: any[] = [];
+
+      if (customerId === "walk-in") {
+        // Fetch bills for Walk In (customer_id is null)
+        const { data: bData, error: bErr } = await supabase
+          .from("bills")
+          .select("*")
+          .is("customer_id", null);
+          
+        if (bErr) throw bErr;
+        billsData = bData || [];
+        paymentsData = []; // Walk in doesn't have records in payments table
+      } else {
+        // Fetch bills
+        const { data: bData, error: bErr } = await supabase
+          .from("bills")
+          .select("*")
+          .eq("customer_id", customerId);
+          
+        if (bErr) throw bErr;
+        billsData = bData || [];
         
-      if (bErr) throw bErr;
-      
-      // Fetch payments
-      const { data: paymentsData, error: pErr } = await supabase
-        .from("payments")
-        .select("*")
-        .eq("customer_id", customerId);
-        
-      if (pErr) throw pErr;
+        // Fetch payments
+        const { data: pData, error: pErr } = await supabase
+          .from("payments")
+          .select("*")
+          .eq("customer_id", customerId);
+          
+        if (pErr) throw pErr;
+        paymentsData = pData || [];
+      }
       
       const entries: LedgerEntry[] = [];
       
@@ -156,6 +174,21 @@ export function useLedgerEntries(customerId: string) {
           amount: b.total,
           balance_after: 0, // Computed below
         });
+        
+        // For walk-in bills that are completed, synthesize a payment
+        // because we don't store walk-in payments in the payments table
+        if (customerId === "walk-in" && b.status === "completed") {
+          // Add 1ms to make the payment appear after the purchase when sorting
+          const paymentDate = new Date(new Date(b.created_at).getTime() + 1).toISOString();
+          entries.push({
+            id: `${b.id}-payment`,
+            type: "payment",
+            date: paymentDate,
+            description: `Payment (${b.payment_method})`,
+            amount: b.total,
+            balance_after: 0,
+          });
+        }
       });
       
       paymentsData?.forEach(p => {
@@ -236,13 +269,7 @@ export function useBillDetails(billId: string | null) {
         
       if (itemsError) throw itemsError;
 
-      // Fetch upfront payment if any
-      const { data: payments } = await supabase
-        .from("payments")
-        .select("amount")
-        .eq("notes", `Upfront payment for Bill ${bill.bill_number}`);
-        
-      const amount_received = payments?.reduce((sum, p) => sum + Number(p.amount), 0) || 0;
+      const amount_received = bill.amount_paid || 0;
       
       return { ...bill, items, amount_received } as Bill & { amount_received: number };
     },
@@ -256,43 +283,9 @@ export function useDeleteBill() {
 
   return useMutation({
     mutationFn: async (bill: Bill) => {
-      // 1. Delete associated upfront payment
-      const { data: payments } = await supabase
-        .from("payments")
-        .select("id, amount")
-        .eq("notes", `Upfront payment for Bill ${bill.bill_number}`);
-
-      const paidAmount = payments?.reduce((sum, p) => sum + Number(p.amount), 0) || 0;
-      
-      if (payments && payments.length > 0) {
-        await supabase
-          .from("payments")
-          .delete()
-          .in("id", payments.map(p => p.id));
-      }
-
-      // 2. Fix customer outstanding balance (deduct balanceDue)
-      const balanceDue = Number(bill.total) - paidAmount;
-      if (bill.customer_id && balanceDue > 0) {
-        const { data: custData } = await supabase
-          .from("customers")
-          .select("outstanding_balance")
-          .eq("id", bill.customer_id)
-          .single();
-        if (custData) {
-          const newBalance = Number(custData.outstanding_balance) - balanceDue;
-          await supabase
-            .from("customers")
-            .update({ outstanding_balance: newBalance })
-            .eq("id", bill.customer_id);
-        }
-      }
-
-      // 3. Delete bill items explicitly (if cascade is not enabled)
-      await supabase.from("bill_items").delete().eq("bill_id", bill.id);
-
-      // 4. Delete the bill
-      const { error } = await supabase.from("bills").delete().eq("id", bill.id);
+      const { error } = await supabase.rpc('delete_bill', {
+        p_bill_id: bill.id,
+      });
       if (error) throw error;
     },
     onSuccess: () => {
@@ -315,7 +308,7 @@ export function useUpdateBill() {
       originalBill: Bill;
       updatedBill: Partial<Bill> & { items: any[]; amount_received?: number | null };
     }) => {
-      // 1. Calculate final status based on amount_received
+      // Calculate final payment amount
       const newTotal = Number(updatedBill.total);
       let newPaidAmount = 0;
       
@@ -333,26 +326,8 @@ export function useUpdateBill() {
       const newBalanceDue = newTotal - newPaidAmount;
       const computedStatus = newBalanceDue > 0 ? "pending" : "completed";
 
-      // 2. Update bill details
-      const { items, id, created_at, amount_received, ...billUpdateData } = updatedBill;
-      
-      const finalBillUpdate = {
-        ...billUpdateData,
-        status: computedStatus,
-      };
-      
-      const { error: billError } = await supabase
-        .from("bills")
-        .update(finalBillUpdate)
-        .eq("id", originalBill.id);
-        
-      if (billError) throw billError;
-
-      // 3. Replace items: Delete old, insert new
-      await supabase.from("bill_items").delete().eq("bill_id", originalBill.id);
-      
-      const newItems = items.map((item) => ({
-        bill_id: originalBill.id,
+      // Build items JSON for the RPC
+      const itemsJson = updatedBill.items.map((item: any) => ({
         product_id: item.product_id,
         product_name: item.product_name,
         quantity: item.quantity,
@@ -361,72 +336,32 @@ export function useUpdateBill() {
         subtotal: item.subtotal,
         hsn_code: item.hsn_code,
       }));
-      
-      const { error: itemsError } = await supabase
-        .from("bill_items")
-        .insert(newItems);
-        
-      if (itemsError) throw itemsError;
 
-      // 4. Reconcile Payments & Balances
-      
-      // -- Revert Old --
-      const { data: oldPayments } = await supabase
-        .from("payments")
-        .select("id, amount")
-        .eq("notes", `Upfront payment for Bill ${originalBill.bill_number}`);
-        
-      const oldPaidAmount = oldPayments?.reduce((sum, p) => sum + Number(p.amount), 0) || 0;
-      const oldBalanceDue = Number(originalBill.total) - oldPaidAmount;
+      const paymentNotes = newPaidAmount > 0
+        ? `Upfront payment for Bill ${originalBill.bill_number}`
+        : null;
 
-      if (oldPayments && oldPayments.length > 0) {
-        await supabase
-          .from("payments")
-          .delete()
-          .in("id", oldPayments.map(p => p.id));
-      }
+      const { error } = await supabase.rpc('update_bill_with_payment', {
+        p_bill_id: originalBill.id,
+        p_customer_id: updatedBill.customer_id || null,
+        p_customer_name: updatedBill.customer_name || null,
+        p_subtotal: Number(updatedBill.subtotal),
+        p_discount_type: updatedBill.discount_type || 'percentage',
+        p_discount_value: Number(updatedBill.discount_value),
+        p_discount_amount: Number(updatedBill.discount_amount),
+        p_gst_rate: Number(updatedBill.gst_rate),
+        p_cgst_amount: Number(updatedBill.cgst_amount),
+        p_sgst_amount: Number(updatedBill.sgst_amount),
+        p_gst_amount: Number(updatedBill.gst_amount),
+        p_total: newTotal,
+        p_amount_paid: newPaidAmount,
+        p_payment_method: updatedBill.payment_method || 'cash',
+        p_status: computedStatus,
+        p_items: itemsJson,
+        p_payment_notes: paymentNotes,
+      });
 
-      if (originalBill.customer_id && oldBalanceDue > 0) {
-        const { data: custData } = await supabase
-          .from("customers")
-          .select("outstanding_balance")
-          .eq("id", originalBill.customer_id)
-          .single();
-        if (custData) {
-          const revertBalance = Number(custData.outstanding_balance) - oldBalanceDue;
-          await supabase
-            .from("customers")
-            .update({ outstanding_balance: revertBalance })
-            .eq("id", originalBill.customer_id);
-        }
-      }
-
-      // -- Apply New --
-      if (updatedBill.customer_id) {
-        if (newBalanceDue > 0) {
-          const { data: custData } = await supabase
-            .from("customers")
-            .select("outstanding_balance")
-            .eq("id", updatedBill.customer_id)
-            .single();
-          if (custData) {
-            const applyBalance = Number(custData.outstanding_balance) + newBalanceDue;
-            await supabase
-              .from("customers")
-              .update({ outstanding_balance: applyBalance })
-              .eq("id", updatedBill.customer_id);
-          }
-        }
-
-        if (newPaidAmount > 0) {
-          await supabase.from("payments").insert({
-            customer_id: updatedBill.customer_id,
-            amount: newPaidAmount,
-            payment_method: updatedBill.payment_method,
-            notes: `Upfront payment for Bill ${originalBill.bill_number}`,
-          });
-        }
-      }
+      if (error) throw error;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["bills"] });

@@ -20,6 +20,7 @@ export function ProductFormDrawer() {
   const queryClient = useQueryClient();
 
   const [name, setName] = useState("");
+  const [skuName, setSkuName] = useState("");
   const [category, setCategory] = useState("fabric");
   const [price, setPrice] = useState("");
   const [unit, setUnit] = useState("metre");
@@ -30,12 +31,14 @@ export function ProductFormDrawer() {
     if (isEdit && product) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setName(product.name);
+      setSkuName(product.sku_name || "");
       setCategory(product.category);
       setPrice(String(product.price_per_unit));
       setUnit(product.unit);
       setHsn(product.hsn_code || "");
     } else if (!isEdit) {
       setName("");
+      setSkuName("");
       setCategory(categories?.[0]?.name || "fabric");
       setPrice("");
       setUnit("metre");
@@ -50,6 +53,7 @@ export function ProductFormDrawer() {
     try {
       const payload = {
         name: name.trim(),
+        sku_name: skuName.trim() || null,
         category,
         price_per_unit: Number(price),
         unit,
@@ -95,6 +99,17 @@ export function ProductFormDrawer() {
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder="e.g. Cotton Shirting - White"
+            className={inputClass}
+          />
+        </div>
+
+        <div>
+          <label className={labelClass}>SKU Name (Not Printed)</label>
+          <input
+            type="text"
+            value={skuName}
+            onChange={(e) => setSkuName(e.target.value)}
+            placeholder="e.g. SKU-1234"
             className={inputClass}
           />
         </div>

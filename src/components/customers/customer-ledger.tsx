@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Plus, ArrowLeft, Phone, MapPin, Trash2, Edit, Eye } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { createClient } from "@/lib/supabase/client";
@@ -22,6 +22,25 @@ export function CustomerLedger() {
   const [isDeleting, setIsDeleting] = useState<string | null>(null);
   const [isDeletingCustomer, setIsDeletingCustomer] = useState(false);
   const [viewBillId, setViewBillId] = useState<string | null>(null);
+  const [walkInBalance, setWalkInBalance] = useState(0);
+
+  // Fetch walk-in balance separately since it's not in useCustomers
+  useEffect(() => {
+    if (selectedCustomerId === "walk-in") {
+      async function fetchWalkInBalance() {
+        const supabase = createClient();
+        const { data } = await supabase
+          .from("bills")
+          .select("total")
+          .is("customer_id", null)
+          .eq("status", "pending");
+        let balance = 0;
+        data?.forEach(b => balance += Number(b.total));
+        setWalkInBalance(balance);
+      }
+      fetchWalkInBalance();
+    }
+  }, [selectedCustomerId]);
 
   const handleDeleteCustomer = () => {
     confirmToast("Are you sure you want to delete this customer? All their bills, payments, and associated data will be permanently deleted. This action cannot be undone.", async () => {
@@ -31,31 +50,11 @@ export function CustomerLedger() {
       try {
         const supabase = createClient();
         
-        // Delete all payments associated with this customer
-        const { error: paymentsError } = await supabase
-          .from("payments")
-          .delete()
-          .eq("customer_id", selectedCustomerId);
-          
-        if (paymentsError) throw paymentsError;
-
-        // Delete all bills associated with this customer (cascades to bill_items)
-        const { error: billsError } = await supabase
-          .from("bills")
-          .delete()
-          .eq("customer_id", selectedCustomerId);
-          
-        if (billsError) throw billsError;
-
-        // Finally delete the customer
-        const { error: deleteError } = await supabase
-          .from("customers")
-          .delete()
-          .eq("id", selectedCustomerId);
+        const { error } = await supabase.rpc('delete_customer', {
+          p_customer_id: selectedCustomerId,
+        });
         
-        if (deleteError) {
-          throw deleteError;
-        }
+        if (error) throw error;
 
         setSelectedCustomerId(null);
         await queryClient.invalidateQueries({ queryKey: ["customers"] });
@@ -78,30 +77,17 @@ export function CustomerLedger() {
 
       try {
         const supabase = createClient();
-        const table = type === "purchase" ? "bills" : "payments";
-        
-        const { error: deleteError } = await supabase.from(table).delete().eq("id", id);
-        if (deleteError) throw deleteError;
 
-        if (selectedCustomerId) {
-          const { data: bData } = await supabase
-            .from("bills")
-            .select("total, status")
-            .eq("customer_id", selectedCustomerId);
-          
-          const { data: pData } = await supabase
-            .from("payments")
-            .select("amount")
-            .eq("customer_id", selectedCustomerId);
-          
-          let newBalance = 0;
-          bData?.forEach(b => newBalance += Number(b.total));
-          pData?.forEach(p => newBalance -= Number(p.amount));
-
-          await supabase
-            .from("customers")
-            .update({ outstanding_balance: newBalance })
-            .eq("id", selectedCustomerId);
+        if (type === "payment") {
+          const { error } = await supabase.rpc('delete_payment', {
+            p_payment_id: id,
+          });
+          if (error) throw error;
+        } else {
+          const { error } = await supabase.rpc('delete_bill', {
+            p_bill_id: id,
+          });
+          if (error) throw error;
         }
 
         await queryClient.invalidateQueries({ queryKey: ["customers"] });
@@ -129,10 +115,23 @@ export function CustomerLedger() {
     );
   }
 
-  const customer = customers?.find((c) => c.id === selectedCustomerId);
+  let customer;
+  if (selectedCustomerId === "walk-in") {
+    customer = {
+      id: "walk-in",
+      name: "Walk In",
+      phone: "-",
+      address: "-",
+      outstanding_balance: walkInBalance,
+    };
+  } else {
+    customer = customers?.find((c) => c.id === selectedCustomerId);
+  }
+
   if (!customer) return null;
 
   const sortedEntries = ledgerEntries || [];
+  const isWalkIn = selectedCustomerId === "walk-in";
 
   return (
     <div className="flex flex-col h-full">
@@ -151,7 +150,7 @@ export function CustomerLedger() {
           <div>
             <div className="flex items-center gap-2">
               <h2 className="text-lg font-bold text-text-primary">{customer.name}</h2>
-              {isAdmin && (
+              {isAdmin && !isWalkIn && (
                 <>
                   <button
                     onClick={() => openDrawer("edit-customer", customer as unknown as Record<string, unknown>)}
@@ -180,7 +179,7 @@ export function CustomerLedger() {
               {customer.address}
             </div>
           </div>
-          {isAdmin && (
+          {isAdmin && !isWalkIn && (
             <button
               onClick={() => openDrawer("add-payment", { customer: customer as unknown as Record<string, unknown> })}
               className="flex items-center gap-1.5 px-3 py-2 bg-green text-white rounded-xl text-xs font-semibold hover:bg-green-dark transition-colors"
@@ -276,7 +275,7 @@ export function CustomerLedger() {
                               <Eye className="w-3.5 h-3.5" />
                             </button>
                           )}
-                          {isAdmin && (
+                          {isAdmin && !isWalkIn && (
                             <button
                               onClick={() => handleDeleteEntry(entry.id, entry.type)}
                               disabled={isDeleting === entry.id}

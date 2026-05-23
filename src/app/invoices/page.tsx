@@ -393,6 +393,9 @@ export default function InvoicesPage() {
                       Payment
                     </th>
                     <th className="text-right px-5 py-3 font-semibold text-text-muted text-xs uppercase tracking-wider">
+                      Received
+                    </th>
+                    <th className="text-right px-5 py-3 font-semibold text-text-muted text-xs uppercase tracking-wider">
                       Total
                     </th>
                     <th className="text-center px-5 py-3 font-semibold text-text-muted text-xs uppercase tracking-wider">
@@ -433,6 +436,9 @@ export default function InvoicesPage() {
                           >
                             {pm.label}
                           </span>
+                        </td>
+                        <td className="px-5 py-3.5 text-right font-semibold text-text-primary whitespace-nowrap">
+                          {formatINR(bill.amount_paid || 0)}
                         </td>
                         <td className="px-5 py-3.5 text-right font-semibold text-text-primary whitespace-nowrap">
                           {formatINR(bill.total)}
@@ -525,9 +531,14 @@ export default function InvoicesPage() {
                           {pm.label}
                         </span>
                       </div>
-                      <p className="text-sm font-bold text-text-primary">
-                        {formatINR(bill.total)}
-                      </p>
+                      <div className="text-right">
+                        <p className="text-xs text-text-muted mb-0.5">
+                          Received: <span className="font-semibold text-text-primary">{formatINR(bill.amount_paid || 0)}</span>
+                        </p>
+                        <p className="text-sm font-bold text-text-primary">
+                          Total: {formatINR(bill.total)}
+                        </p>
+                      </div>
                     </div>
 
                     {/* Actions row */}

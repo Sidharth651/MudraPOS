@@ -22,6 +22,7 @@ export type Unit = "metre" | "piece";
 export interface Product {
   id: string;
   name: string;
+  sku_name?: string | null;
   category: string;
   price_per_unit: number;
   unit: Unit;
@@ -69,8 +70,19 @@ export interface Bill {
   sgst_amount: number;
   gst_amount: number;
   total: number;
+  amount_paid: number;
   payment_method: PaymentMethod;
   status: BillStatus;
+  created_at: string;
+}
+
+// ── Payment Allocations ─────────────────────────────────────
+
+export interface PaymentAllocation {
+  id: string;
+  payment_id: string;
+  bill_id: string;
+  amount: number;
   created_at: string;
 }
 

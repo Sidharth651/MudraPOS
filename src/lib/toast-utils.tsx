@@ -22,5 +22,5 @@ export const confirmToast = (message: string, onConfirm: () => void) => {
         </button>
       </div>
     </div>
-  ), { duration: Infinity });
+  ), { duration: Infinity, id: 'confirm-toast' });
 };

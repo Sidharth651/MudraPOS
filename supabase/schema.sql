@@ -17,6 +17,7 @@ CREATE TABLE IF NOT EXISTS categories (
 CREATE TABLE IF NOT EXISTS products (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   name TEXT NOT NULL,
+  sku_name TEXT,
   category TEXT NOT NULL DEFAULT 'fabric',
   price_per_unit NUMERIC(10, 2) NOT NULL,
   unit TEXT NOT NULL DEFAULT 'metre' CHECK (unit IN ('metre', 'piece')),
@@ -52,6 +53,7 @@ CREATE TABLE IF NOT EXISTS bills (
   gst_amount NUMERIC(10, 2) DEFAULT 0,
   total NUMERIC(10, 2) NOT NULL DEFAULT 0,
   payment_method TEXT NOT NULL DEFAULT 'cash' CHECK (payment_method IN ('cash', 'upi', 'card', 'split', 'credit')),
+  amount_paid NUMERIC(10, 2) DEFAULT 0,
   status TEXT DEFAULT 'completed' CHECK (status IN ('completed', 'pending', 'cancelled')),
   created_at TIMESTAMPTZ DEFAULT now()
 );
@@ -70,13 +72,23 @@ CREATE TABLE IF NOT EXISTS bill_items (
   hsn_code TEXT
 );
 
+-- ── Payment Allocations ─────────────────────────────────────
+
+CREATE TABLE IF NOT EXISTS payment_allocations (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  payment_id UUID NOT NULL REFERENCES payments(id) ON DELETE CASCADE,
+  bill_id UUID NOT NULL REFERENCES bills(id) ON DELETE CASCADE,
+  amount NUMERIC(10, 2) NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+
 -- ── Payments (Khata) ────────────────────────────────────────
 
 CREATE TABLE IF NOT EXISTS payments (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   customer_id UUID NOT NULL REFERENCES customers(id) ON DELETE CASCADE,
   amount NUMERIC(10, 2) NOT NULL,
-  payment_method TEXT NOT NULL DEFAULT 'cash' CHECK (payment_method IN ('cash', 'upi', 'card')),
+  payment_method TEXT NOT NULL DEFAULT 'cash' CHECK (payment_method IN ('cash', 'upi', 'card', 'waiver')),
   notes TEXT DEFAULT '',
   created_at TIMESTAMPTZ DEFAULT now()
 );
@@ -113,6 +125,7 @@ ALTER TABLE products ENABLE ROW LEVEL SECURITY;
 ALTER TABLE customers ENABLE ROW LEVEL SECURITY;
 ALTER TABLE bills ENABLE ROW LEVEL SECURITY;
 ALTER TABLE bill_items ENABLE ROW LEVEL SECURITY;
+ALTER TABLE payment_allocations ENABLE ROW LEVEL SECURITY;
 ALTER TABLE payments ENABLE ROW LEVEL SECURITY;
 ALTER TABLE staff ENABLE ROW LEVEL SECURITY;
 ALTER TABLE settings ENABLE ROW LEVEL SECURITY;
@@ -123,6 +136,7 @@ CREATE POLICY "Allow all access to products" ON products FOR ALL USING (true) WI
 CREATE POLICY "Allow all access to customers" ON customers FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Allow all access to bills" ON bills FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Allow all access to bill_items" ON bill_items FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "Allow all access to payment_allocations" ON payment_allocations FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Allow all access to payments" ON payments FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Allow all access to staff" ON staff FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Allow all access to settings" ON settings FOR ALL USING (true) WITH CHECK (true);
@@ -133,4 +147,6 @@ CREATE INDEX IF NOT EXISTS idx_bills_customer ON bills(customer_id);
 CREATE INDEX IF NOT EXISTS idx_bills_created ON bills(created_at);
 CREATE INDEX IF NOT EXISTS idx_bill_items_bill ON bill_items(bill_id);
 CREATE INDEX IF NOT EXISTS idx_payments_customer ON payments(customer_id);
+CREATE INDEX IF NOT EXISTS idx_pa_payment ON payment_allocations(payment_id);
+CREATE INDEX IF NOT EXISTS idx_pa_bill ON payment_allocations(bill_id);
 CREATE INDEX IF NOT EXISTS idx_products_category ON products(category);
