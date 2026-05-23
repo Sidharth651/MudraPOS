@@ -3,6 +3,7 @@
 import { ShopDetailsCard } from "@/components/settings/shop-details-card";
 import { ReceiptSettingsCard } from "@/components/settings/receipt-settings-card";
 import { AppearanceCard } from "@/components/settings/appearance-card";
+import { InvoiceNumberCard } from "@/components/settings/invoice-number-card";
 import { useAuthStore } from "@/stores/auth-store";
 import { LogOut } from "lucide-react";
 
@@ -31,7 +32,10 @@ export default function SettingsPage() {
         <AppearanceCard />
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
           <ShopDetailsCard />
-          <ReceiptSettingsCard />
+          <div className="space-y-6">
+            <ReceiptSettingsCard />
+            <InvoiceNumberCard />
+          </div>
         </div>
       </div>
     </div>

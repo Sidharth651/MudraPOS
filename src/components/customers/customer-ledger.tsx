@@ -70,6 +70,33 @@ export function CustomerLedger() {
     });
   };
 
+  const handleDeleteWalkInData = () => {
+    confirmToast("Are you sure you want to delete ALL Walk In data? All walk-in invoices and their items will be permanently deleted. This action cannot be undone.", async () => {
+      setIsDeletingCustomer(true);
+      const toastId = toast.loading("Deleting all Walk In data...");
+
+      try {
+        const supabase = createClient();
+
+        const { error } = await supabase.rpc('delete_walk_in_data');
+
+        if (error) throw error;
+
+        setSelectedCustomerId(null);
+        await queryClient.invalidateQueries({ queryKey: ["bills"] });
+        await queryClient.invalidateQueries({ queryKey: ["ledger"] });
+        await queryClient.invalidateQueries({ queryKey: ["pending-bills"] });
+        setWalkInBalance(0);
+        toast.success("All Walk In data deleted successfully.", { id: toastId });
+      } catch (error) {
+        console.error("Failed to delete Walk In data:", error);
+        toast.error("Failed to delete Walk In data. Please try again.", { id: toastId });
+      } finally {
+        setIsDeletingCustomer(false);
+      }
+    });
+  };
+
   const handleDeleteEntry = (id: string, type: "purchase" | "payment") => {
     confirmToast(`Are you sure you want to delete this ${type}?`, async () => {
       setIsDeleting(id);
@@ -93,6 +120,7 @@ export function CustomerLedger() {
         await queryClient.invalidateQueries({ queryKey: ["customers"] });
         await queryClient.invalidateQueries({ queryKey: ["ledger"] });
         await queryClient.invalidateQueries({ queryKey: ["bills"] });
+        await queryClient.invalidateQueries({ queryKey: ["pending-bills"] });
         toast.success(`${type === "purchase" ? "Purchase" : "Payment"} deleted successfully.`, { id: toastId });
       } catch (error) {
         console.error("Failed to delete entry:", error);
@@ -168,6 +196,16 @@ export function CustomerLedger() {
                     <Trash2 className="w-4 h-4" />
                   </button>
                 </>
+              )}
+              {isAdmin && isWalkIn && (
+                <button
+                  onClick={handleDeleteWalkInData}
+                  disabled={isDeletingCustomer}
+                  className="p-1 rounded-md text-text-muted hover:text-red hover:bg-red-light transition-colors disabled:opacity-50"
+                  title="Delete All Walk In Data"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
               )}
             </div>
             <div className="flex items-center gap-1 text-xs text-text-muted mt-1">
@@ -275,7 +313,7 @@ export function CustomerLedger() {
                               <Eye className="w-3.5 h-3.5" />
                             </button>
                           )}
-                          {isAdmin && !isWalkIn && (
+                          {isAdmin && (
                             <button
                               onClick={() => handleDeleteEntry(entry.id, entry.type)}
                               disabled={isDeleting === entry.id}

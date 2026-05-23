@@ -176,13 +176,9 @@ export const BillReceipt = forwardRef<HTMLDivElement, BillReceiptProps>(
                 <span>Taxable:</span>
                 <span>{shortINR(taxableAmount)}</span>
               </div>
-              <div style={rowStyle}>
-                <span>CGST ({halfGst}%):</span>
-                <span>{shortINR(bill.cgst_amount)}</span>
-              </div>
-              <div style={rowStyle}>
-                <span>SGST ({halfGst}%):</span>
-                <span>{shortINR(bill.sgst_amount)}</span>
+              <div style={{ ...rowStyle, fontWeight: 600 }}>
+                <span>GST ({bill.gst_rate}%):</span>
+                <span>{shortINR(bill.cgst_amount + bill.sgst_amount)}</span>
               </div>
             </>
           )}

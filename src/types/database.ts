@@ -113,6 +113,7 @@ export interface ShopSettings {
   whatsapp_enabled: boolean;
   whatsapp_number: string;
   low_stock_threshold: number;
+  invoice_start_number: number;
 }
 
 // ── Staff ───────────────────────────────────────────────────

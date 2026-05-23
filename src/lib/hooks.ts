@@ -100,6 +100,7 @@ export function useSettings() {
           whatsapp_enabled: data.whatsapp_enabled,
           whatsapp_number: data.whatsapp_number,
           low_stock_threshold: data.low_stock_threshold,
+          invoice_start_number: data.invoice_start_number ?? 1,
         } as ShopSettings;
       }
       return null;
@@ -228,22 +229,59 @@ export function useNextBillNumber() {
       const year = new Date().getFullYear();
       const prefix = `INV-${year}-`;
 
-      const { data, error } = await supabase
-        .from("bills")
-        .select("bill_number")
-        .like("bill_number", `${prefix}%`)
-        .order("bill_number", { ascending: false })
-        .limit(1);
+      // Fetch the last bill number and the configured start number in parallel
+      const [billsRes, settingsRes] = await Promise.all([
+        supabase
+          .from("bills")
+          .select("bill_number")
+          .like("bill_number", `${prefix}%`)
+          .order("bill_number", { ascending: false })
+          .limit(1),
+        supabase
+          .from("settings")
+          .select("invoice_start_number")
+          .limit(1)
+          .maybeSingle(),
+      ]);
 
-      if (error) throw error;
+      if (billsRes.error) throw billsRes.error;
 
-      let nextNum = 1;
-      if (data && data.length > 0) {
-        const lastNum = parseInt(data[0].bill_number.replace(prefix, ""), 10);
-        if (!isNaN(lastNum)) nextNum = lastNum + 1;
+      const startNum: number = settingsRes.data?.invoice_start_number ?? 1;
+
+      let nextNum = startNum;
+      if (billsRes.data && billsRes.data.length > 0) {
+        const lastNum = parseInt(billsRes.data[0].bill_number.replace(prefix, ""), 10);
+        if (!isNaN(lastNum)) nextNum = Math.max(startNum, lastNum + 1);
       }
 
       return `${prefix}${String(nextNum).padStart(3, "0")}`;
+    },
+  });
+}
+
+export function useUpdateInvoiceStartNumber() {
+  const supabase = useSupabase();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (startNumber: number) => {
+      const { data: existing } = await supabase
+        .from("settings")
+        .select("id")
+        .limit(1)
+        .maybeSingle();
+
+      if (existing?.id) {
+        const { error } = await supabase
+          .from("settings")
+          .update({ invoice_start_number: startNumber })
+          .eq("id", existing.id);
+        if (error) throw error;
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["settings"] });
+      queryClient.invalidateQueries({ queryKey: ["nextBillNumber"] });
     },
   });
 }
@@ -386,6 +424,7 @@ export function useUpdateSettings() {
       if (updatedSettings.whatsapp_enabled !== undefined) payload.whatsapp_enabled = updatedSettings.whatsapp_enabled;
       if (updatedSettings.whatsapp_number !== undefined) payload.whatsapp_number = updatedSettings.whatsapp_number;
       if (updatedSettings.low_stock_threshold !== undefined) payload.low_stock_threshold = updatedSettings.low_stock_threshold;
+      if (updatedSettings.invoice_start_number !== undefined) payload.invoice_start_number = updatedSettings.invoice_start_number;
       
       if (updatedSettings.gst_config !== undefined) {
         payload.gst_low_threshold = updatedSettings.gst_config.low_threshold;
