@@ -241,12 +241,16 @@ export function useNextBillNumber() {
           .from("settings")
           .select("invoice_start_number")
           .limit(1)
-          .maybeSingle(),
+          .maybeSingle()
+          .then((r) => r) // always resolves; errors handled below
+          .catch(() => ({ data: null, error: null })),
       ]);
 
       if (billsRes.error) throw billsRes.error;
 
-      const startNum: number = settingsRes.data?.invoice_start_number ?? 1;
+      // If the column doesn't exist yet, fall back to 1
+      const startNum: number =
+        (settingsRes as any)?.data?.invoice_start_number ?? 1;
 
       let nextNum = startNum;
       if (billsRes.data && billsRes.data.length > 0) {
@@ -468,6 +472,7 @@ export function useUpdateSettings() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["settings"] });
+      queryClient.invalidateQueries({ queryKey: ["nextBillNumber"] });
     },
   });
 }
