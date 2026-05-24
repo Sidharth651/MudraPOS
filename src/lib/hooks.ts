@@ -237,13 +237,13 @@ export function useNextBillNumber() {
           .like("bill_number", `${prefix}%`)
           .order("bill_number", { ascending: false })
           .limit(1),
-        supabase
-          .from("settings")
-          .select("invoice_start_number")
-          .limit(1)
-          .maybeSingle()
-          .then((r) => r) // always resolves; errors handled below
-          .catch(() => ({ data: null, error: null })),
+        Promise.resolve(
+          supabase
+            .from("settings")
+            .select("invoice_start_number")
+            .limit(1)
+            .maybeSingle()
+        ).catch(() => ({ data: null, error: null })),
       ]);
 
       if (billsRes.error) throw billsRes.error;
