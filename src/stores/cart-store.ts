@@ -36,7 +36,7 @@ interface CartState {
   setAmountReceived: (amount: number | null) => void;
   setCustomer: (id: string | null, name: string | null) => void;
   clearCart: () => void;
-  saveBill: (billNumber: string, waiveBalance?: boolean) => Promise<Bill | null>;
+  saveBill: (billNumber: string, waiveBalance?: boolean, cashierId?: string, cashierName?: string) => Promise<Bill | null>;
 
   // Computed (as functions)
   getSubtotal: () => number;
@@ -143,7 +143,7 @@ export const useCartStore = create<CartState>((set, get) => ({
     });
   },
 
-  saveBill: async (billNumber: string, waiveBalance?: boolean) => {
+  saveBill: async (billNumber: string, waiveBalance?: boolean, cashierId?: string, cashierName?: string) => {
     const state = get();
     if (state.items.length === 0) return null;
 
@@ -201,6 +201,8 @@ export const useCartStore = create<CartState>((set, get) => ({
         p_items: itemsJson,
         p_payment_notes: paymentNotes,
         p_waived_amount: waiveBalance ? originalBalanceDue : 0,
+        p_cashier_id: cashierId || null,
+        p_cashier_name: cashierName || null,
       });
 
       if (error) throw error;
@@ -236,6 +238,8 @@ export const useCartStore = create<CartState>((set, get) => ({
         amount_paid: actualPaidAmount,
         payment_method: billPaymentMethod,
         status: balanceDue > 0 ? "pending" : "completed",
+        cashier_id: cashierId || null,
+        cashier_name: cashierName || null,
         created_at: data.created_at,
       };
 

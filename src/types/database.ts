@@ -73,6 +73,8 @@ export interface Bill {
   amount_paid: number;
   payment_method: PaymentMethod;
   status: BillStatus;
+  cashier_id?: string | null;
+  cashier_name?: string | null;
   created_at: string;
 }
 
@@ -152,4 +154,5 @@ export interface LedgerEntry {
   description: string;
   amount: number;
   balance_after: number;
+  cashier_name?: string | null;
 }

@@ -4,6 +4,8 @@ import { ShopDetailsCard } from "@/components/settings/shop-details-card";
 import { ReceiptSettingsCard } from "@/components/settings/receipt-settings-card";
 import { AppearanceCard } from "@/components/settings/appearance-card";
 import { InvoiceNumberCard } from "@/components/settings/invoice-number-card";
+import { StaffCard } from "@/components/settings/staff-card";
+import { StaffFormDrawer } from "@/components/settings/staff-form-drawer";
 import { useAuthStore } from "@/stores/auth-store";
 import { LogOut } from "lucide-react";
 
@@ -11,7 +13,7 @@ export default function SettingsPage() {
   const logout = useAuthStore((state) => state.logout);
 
   return (
-    <div className="p-4 lg:p-6">
+    <div className="p-4 lg:p-6 pb-24 lg:pb-6">
       {/* Header */}
       <div className="mb-6 flex items-center justify-between">
         <div>
@@ -30,14 +32,20 @@ export default function SettingsPage() {
       {/* Cards */}
       <div className="mt-8 space-y-6">
         <AppearanceCard />
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
-          <ShopDetailsCard />
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 items-start">
+          <div className="space-y-6">
+            <ShopDetailsCard />
+            <StaffCard />
+          </div>
           <div className="space-y-6">
             <ReceiptSettingsCard />
             <InvoiceNumberCard />
           </div>
         </div>
       </div>
+
+      {/* Drawers */}
+      <StaffFormDrawer />
     </div>
   );
 }

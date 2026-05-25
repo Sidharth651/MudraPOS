@@ -174,6 +174,7 @@ export function useLedgerEntries(customerId: string) {
           description: `Bill ${b.bill_number}`,
           amount: b.total,
           balance_after: 0, // Computed below
+          cashier_name: b.cashier_name,
         });
         
         // For walk-in bills that are completed, synthesize a payment
@@ -188,6 +189,7 @@ export function useLedgerEntries(customerId: string) {
             description: `Payment (${b.payment_method})`,
             amount: b.total,
             balance_after: 0,
+            cashier_name: b.cashier_name,
           });
         }
       });

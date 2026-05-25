@@ -12,7 +12,8 @@ import {
 import { useQueryClient } from "@tanstack/react-query";
 import { useCartStore } from "@/stores/cart-store";
 import { formatINR, cn } from "@/lib/utils";
-import type { PaymentMethod, Bill } from "@/types/database";
+import { CashierSelectModal } from "./cashier-select-modal";
+import type { PaymentMethod, Bill, Staff } from "@/types/database";
 
 const paymentMethods: {
   key: PaymentMethod;
@@ -46,11 +47,12 @@ export function PaymentBar({ total, billNumber, onBillSaved }: PaymentBarProps) 
   const queryClient = useQueryClient();
   const [error, setError] = useState<string | null>(null);
   const [waiveBalance, setWaiveBalance] = useState(false);
+  const [showCashierModal, setShowCashierModal] = useState(false);
 
   const balanceDue = getBalanceDue();
   const showAmountReceived = payment_method === "cash" || payment_method === "upi";
 
-  const handleCompletePayment = async () => {
+  const handleCompleteClick = () => {
     if (!billNumber) return;
     setError(null);
 
@@ -60,8 +62,15 @@ export function PaymentBar({ total, billNumber, onBillSaved }: PaymentBarProps) 
       return;
     }
 
+    // Show cashier selection modal
+    setShowCashierModal(true);
+  };
+
+  const handleCashierSelected = async (staff: Staff) => {
+    setShowCashierModal(false);
+
     try {
-      const savedBill = await saveBill(billNumber, waiveBalance);
+      const savedBill = await saveBill(billNumber, waiveBalance, staff.id, staff.name);
       if (savedBill) {
         // Invalidate caches so dashboard/reports update
         queryClient.invalidateQueries({ queryKey: ["bills"] });
@@ -181,7 +190,7 @@ export function PaymentBar({ total, billNumber, onBillSaved }: PaymentBarProps) 
         </button>
 
         <button
-          onClick={handleCompletePayment}
+          onClick={handleCompleteClick}
           disabled={saving}
           className="flex-[2] py-3 bg-primary text-white rounded-xl font-semibold text-sm hover:bg-primary-dark transition-colors shadow-sm flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
         >
@@ -198,6 +207,13 @@ export function PaymentBar({ total, billNumber, onBillSaved }: PaymentBarProps) 
           )}
         </button>
       </div>
+
+      {/* Cashier Selection Modal */}
+      <CashierSelectModal
+        open={showCashierModal}
+        onSelect={handleCashierSelected}
+        onClose={() => setShowCashierModal(false)}
+      />
     </div>
   );
 }

@@ -390,6 +390,9 @@ export default function InvoicesPage() {
                       Customer
                     </th>
                     <th className="text-left px-5 py-3 font-semibold text-text-muted text-xs uppercase tracking-wider">
+                      Cashier
+                    </th>
+                    <th className="text-left px-5 py-3 font-semibold text-text-muted text-xs uppercase tracking-wider">
                       Payment
                     </th>
                     <th className="text-right px-5 py-3 font-semibold text-text-muted text-xs uppercase tracking-wider">
@@ -425,6 +428,11 @@ export default function InvoicesPage() {
                         <td className="px-5 py-3.5 text-text-primary whitespace-nowrap">
                           {bill.customer_name || (
                             <span className="text-text-light">Walk-in</span>
+                          )}
+                        </td>
+                        <td className="px-5 py-3.5 text-text-muted whitespace-nowrap">
+                          {bill.cashier_name || (
+                            <span className="text-text-light">—</span>
                           )}
                         </td>
                         <td className="px-5 py-3.5 whitespace-nowrap">
@@ -515,7 +523,7 @@ export default function InvoicesPage() {
 
                     {/* Details row */}
                     <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 flex-wrap">
                         <p className="text-sm text-text-muted">
                           {bill.customer_name || (
                             <span className="text-text-light">Walk-in</span>
@@ -530,6 +538,14 @@ export default function InvoicesPage() {
                         >
                           {pm.label}
                         </span>
+                        {bill.cashier_name && (
+                          <>
+                            <span className="text-border">•</span>
+                            <span className="text-[11px] text-text-light">
+                              {bill.cashier_name}
+                            </span>
+                          </>
+                        )}
                       </div>
                       <div className="text-right">
                         <p className="text-xs text-text-muted mb-0.5">

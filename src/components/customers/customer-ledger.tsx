@@ -293,6 +293,12 @@ export function CustomerLedger() {
                         <p className="text-xs text-text-muted mt-0.5">
                           {formatDateTime(entry.date)}
                         </p>
+                        {entry.cashier_name && (
+                          <p className="text-[10px] text-text-light mt-1 flex items-center gap-1">
+                            <span className="w-1 h-1 rounded-full bg-border" />
+                            By {entry.cashier_name}
+                          </p>
+                        )}
                       </div>
                       <div className="text-right flex-shrink-0">
                         <div className="flex items-center justify-end gap-2">

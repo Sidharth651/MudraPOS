@@ -53,6 +53,8 @@ export default function POSPage() {
     amount_paid: 0,
     payment_method: cartState.payment_method,
     status: "pending",
+    cashier_id: null,
+    cashier_name: null,
     created_at: new Date().toISOString(),
   };
 
