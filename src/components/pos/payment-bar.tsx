@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import toast from "react-hot-toast";
 import {
   Banknote,
   Smartphone,
@@ -78,6 +79,11 @@ export function PaymentBar({ total, billNumber, onBillSaved }: PaymentBarProps) 
         queryClient.invalidateQueries({ queryKey: ["ledger"] });
         queryClient.invalidateQueries({ queryKey: ["pending-bills"] });
         queryClient.invalidateQueries({ queryKey: ["nextBillNumber"] });
+
+        toast.success(`Invoice ${savedBill.bill_number} created`, {
+          duration: 4000,
+          icon: "🧾",
+        });
 
         onBillSaved(savedBill);
       }
